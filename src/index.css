@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 활성화된 메뉴 스타일 */
+.nav-link-active {
+  color: #813eb6 !important; /* 키 컬러 */
+  font-weight: 800 !important; /* 아주 두껍게 */
+  font-size: 1.05rem !important; /* 살짝 크게 */
+  position: relative;
+}
+
+/* 활성화된 메뉴 하단에 점 또는 선 추가 (선택 사항) */
+.nav-link-active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 2px;
+  background-color: #813eb6;
+  border-radius: 2px;
+}
