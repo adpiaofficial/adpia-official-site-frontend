@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 // 💡 로고 파일 경로를 다시 한번 확인해주세요!
 import mainLogo from "../assets/logowhite.png";
 
