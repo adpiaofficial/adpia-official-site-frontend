@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import logoWhite from "../assets/logoWhite.png";
+import logoWhite from "../assets/logowhite.png";
 
 /**
  * 💡 데이터 관리 포인트 (전체 공지사항 더미 데이터)
