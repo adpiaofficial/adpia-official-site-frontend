@@ -30,3 +30,5 @@ body {
   background-color: #813eb6;
   border-radius: 2px;
 }
+
+.break-keep { word-break: keep-all; }

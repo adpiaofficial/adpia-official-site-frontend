@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, 
+  withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -11,7 +11,6 @@ let pendingRequests: ((token: string | null) => void)[] = [];
 httpClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
-
     if (token) {
       const headers = config.headers ?? {};
       config.headers = {
@@ -19,13 +18,11 @@ httpClient.interceptors.request.use(
         Authorization: `Bearer ${token}`,
       } as any;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터: 401 이면 /members/refresh 로 자동 재발급 후 원래 요청 한 번만 재시도
 httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -36,15 +33,28 @@ httpClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // ✅ 밴 계정이면 refresh 금지 + 강제 로그아웃
+    const data: any = error.response?.data;
+    if (data?.code === "ACCOUNT_DISABLED") {
+      localStorage.removeItem("accessToken");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
+    }
+
+    // refresh 요청 자체가 401이면 더 진행하지 않음
     if (originalRequest.url?.includes("/members/refresh")) {
       return Promise.reject(error);
     }
 
+    // 이미 재시도한 요청이면 종료
     if (originalRequest._retry) {
       return Promise.reject(error);
     }
     originalRequest._retry = true;
 
+    // 이미 refresh 중이면 큐에 대기
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         pendingRequests.push((newToken) => {
@@ -67,7 +77,6 @@ httpClient.interceptors.response.use(
 
     try {
       const refreshResponse = await httpClient.post("/members/refresh");
-
       const newToken = (refreshResponse.data as any).token as string;
       localStorage.setItem("accessToken", newToken);
 
@@ -83,6 +92,7 @@ httpClient.interceptors.response.use(
       return httpClient(originalRequest);
     } catch (refreshError) {
       localStorage.removeItem("accessToken");
+
       pendingRequests.forEach((cb) => cb(null));
       pendingRequests = [];
       isRefreshing = false;
