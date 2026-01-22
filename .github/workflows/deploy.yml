@@ -2,8 +2,7 @@ name: Deploy Frontend to Adpia Server
 
 on:
   push:
-    branches:
-      - main          # 프론트 main에 push되면 배포
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -11,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH (frontend)
+      - name: Deploy Frontend via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -19,7 +18,17 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            echo "[CI] Frontend deploy start..."
+            set -euo pipefail
+
+            echo "[CI] Frontend deploy start: $(date)"
+
+            echo "[CI] Frontend commit BEFORE:"
+            cd /srv/adpia/adpia-official-site-frontend && git rev-parse --short HEAD || true
+
             cd /srv/adpia
-            ./deploy.sh
-            echo "[CI] Frontend deploy finished."
+            bash ./deploy.sh
+
+            echo "[CI] Frontend commit AFTER:"
+            cd /srv/adpia/adpia-official-site-frontend && git rev-parse --short HEAD
+
+            echo "[CI] Frontend deploy finished: $(date)"
