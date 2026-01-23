@@ -15,60 +15,64 @@ export default function Navbar() {
   const { user, logout, loading } = useAuth();
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null); // desktop dropdown
-  const [mobileOpen, setMobileOpen] = useState(false);               // mobile drawer
+  const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
 
-  const navItems: NavItem[] = useMemo(() => [
-    {
-      name: "ADPIA",
-      path: "/about",
-      subMenus: [
-        { name: "연혁", path: "/about/history" },
-        { name: "회칙", path: "/about/rules" },
-        { name: "보도자료", path: "/about/news" },
-        { name: "CI", path: "/about/ci" },
-      ],
-    },
-    {
-      name: "COMMUNITY",
-      path: "/community",
-      subMenus: [
-        { name: "공지사항", path: "/community/notice" },
-        { name: "애드찬스", path: "/community/chance" },
-        { name: "활동 사진", path: "/community/gallery" },
-        { name: "OB 게시판", path: "/community/ob" },
-      ],
-    },
-    {
-      name: "ARCHIVE",
-      path: "/archive",
-      subMenus: [
-        { name: "경쟁 PT", path: "/archive/pt" },
-        { name: "사회공헌프로젝트", path: "/archive/social" },
-        { name: "광고제", path: "/archive/festival" },
-        { name: "백문백답", path: "/archive/qna" },
-        { name: "3분 스피치", path: "/archive/speech" },
-        { name: "광고학개론", path: "/archive/intro" },
-      ],
-    },
-    {
-      name: "SEMMINAR",
-      path: "/seminar",
-      subMenus: [
-        { name: "전체", path: "/seminar/all" },
-        { name: "학술국", path: "/seminar/academic" },
-        { name: "운영팀", path: "/seminar/operation" },
-      ],
-    },
-    {
-      name: "RECRUIT",
-      path: "/recruit",
-      subMenus: [
-        { name: "공지사항", path: "/recruit/notice" },
-        { name: "Q&A", path: "/recruit/faq" },
-      ],
-    },
-  ], []);
+  const navItems: NavItem[] = useMemo(
+    () => [
+      {
+        name: "ADPIA",
+        path: "/about",
+        subMenus: [
+          { name: "연혁", path: "/about/history" },
+          { name: "회칙", path: "/about/rules" },
+          { name: "보도자료", path: "/about/news" },
+          { name: "CI", path: "/about/ci" },
+        ],
+      },
+      {
+        name: "COMMUNITY",
+        path: "/community",
+        subMenus: [
+          { name: "공지사항", path: "/community/notice" },
+          { name: "애드찬스", path: "/community/chance" },
+          { name: "활동 사진", path: "/community/gallery" },
+          { name: "OB 게시판", path: "/community/ob" },
+        ],
+      },
+      {
+        name: "ARCHIVE",
+        path: "/archive",
+        subMenus: [
+          { name: "경쟁 PT", path: "/archive/pt" },
+          { name: "사회공헌프로젝트", path: "/archive/social" },
+          { name: "광고제", path: "/archive/festival" },
+          { name: "백문백답", path: "/archive/qna" },
+          { name: "3분 스피치", path: "/archive/speech" },
+          { name: "광고학개론", path: "/archive/intro" },
+        ],
+      },
+      {
+        name: "SEMMINAR",
+        path: "/seminar",
+        subMenus: [
+          { name: "전체", path: "/seminar/all" },
+          { name: "학술국", path: "/seminar/academic" },
+          { name: "운영팀", path: "/seminar/operation" },
+        ],
+      },
+      {
+        name: "RECRUIT",
+        path: "/recruit",
+        subMenus: [
+          { name: "공지사항", path: "/recruit/notice" },
+          // ✅ App 라우트랑 맞춤 (/recruit/qa)
+          { name: "Q&A", path: "/recruit/qa" },
+        ],
+      },
+    ],
+    []
+  );
 
   const isSuperAdmin = user?.role === "ROLE_SUPER_ADMIN";
 
@@ -94,22 +98,42 @@ export default function Navbar() {
         <div className="hidden md:flex items-center justify-center gap-10 h-full">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
+            const isRecruit = item.name === "RECRUIT";
+
             return (
               <div
                 key={item.name}
                 className="relative h-full flex items-center"
                 onMouseEnter={() => setActiveMenu(item.name)}
               >
-                <Link
-                  to={item.path}
-                  className={`font-black tracking-widest transition-all h-full flex items-center ${
-                    isActive || activeMenu === item.name
-                      ? "text-[#813eb6] text-[16px]"
-                      : "text-gray-600 text-[14px]"
-                  }`}
-                >
-                  {item.name}
-                </Link>
+                {/* ✅ RECRUIT는 클릭해도 이동 X (드롭다운 토글만) */}
+                {isRecruit ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveMenu((cur) => (cur === item.name ? null : item.name));
+                    }}
+                    className={`font-black tracking-widest transition-all h-full flex items-center ${
+                      isActive || activeMenu === item.name
+                        ? "text-[#813eb6] text-[16px]"
+                        : "text-gray-600 text-[14px]"
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <Link
+                    to={item.path}
+                    className={`font-black tracking-widest transition-all h-full flex items-center ${
+                      isActive || activeMenu === item.name
+                        ? "text-[#813eb6] text-[16px]"
+                        : "text-gray-600 text-[14px]"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                )}
 
                 {/* dropdown */}
                 <div
@@ -124,6 +148,7 @@ export default function Navbar() {
                       <Link
                         key={sub.name}
                         to={sub.path}
+                        onClick={() => setActiveMenu(null)} // ✅ 클릭하면 드롭다운 닫기
                         className="px-4 py-2.5 text-[13px] font-bold text-gray-400 hover:text-[#813eb6] hover:bg-purple-50 rounded-2xl transition-all whitespace-nowrap"
                       >
                         {sub.name}
@@ -270,9 +295,14 @@ export default function Navbar() {
               {navItems.map((item) => {
                 const open = mobileAccordion === item.name;
                 return (
-                  <div key={item.name} className="border border-gray-100 rounded-2xl mb-2 overflow-hidden">
+                  <div
+                    key={item.name}
+                    className="border border-gray-100 rounded-2xl mb-2 overflow-hidden"
+                  >
                     <button
-                      onClick={() => setMobileAccordion((cur) => (cur === item.name ? null : item.name))}
+                      onClick={() =>
+                        setMobileAccordion((cur) => (cur === item.name ? null : item.name))
+                      }
                       className="w-full flex items-center justify-between px-4 py-3 text-sm font-black text-gray-800 bg-white"
                     >
                       {item.name}
