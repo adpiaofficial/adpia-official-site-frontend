@@ -14,6 +14,10 @@ import NoticeListPage from "./pages/NoticeListPage";
 import NoticeDetailPage from "./pages/NoticeDetailPage";
 import NoticeUpsertPage from "./pages/NoticeUpsertPage";
 
+import QaListPage from "./pages/QaListPage";
+import QaDetailPage from "./pages/QaDetailPage";
+import QaUpsertPage from "./pages/QaUpsertPage";
+
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">
     Community Page
@@ -44,7 +48,6 @@ function App() {
           <Route path="/archive" element={<ArchivePage />} />
           <Route path="/seminar" element={<SeminarPage />} />
 
-          {/* ✅ recruit 진입 시 notice로 */}
           <Route path="/recruit" element={<Navigate to="/recruit/notice" replace />} />
 
           {/* ✅ NOTICE */}
@@ -53,11 +56,10 @@ function App() {
           <Route path="/recruit/notice/new" element={<NoticeUpsertPage mode="create" />} />
           <Route path="/recruit/notice/:id/edit" element={<NoticeUpsertPage mode="edit" />} />
 
-          {/* QA는 나중에 */}
-          {/* <Route path="/recruit/qa" element={<QaListPage />} /> */}
-          {/* <Route path="/recruit/qa/:id" element={<QaDetailPage />} /> */}
-          {/* <Route path="/recruit/qa/new" element={<QaUpsertPage mode="create" />} /> */}
-          {/* <Route path="/recruit/qa/:id/edit" element={<QaUpsertPage mode="edit" />} /> */}
+          <Route path="/recruit/qa" element={<QaListPage />} />
+          <Route path="/recruit/qa/:id" element={<QaDetailPage />} />
+          <Route path="/recruit/qa/new" element={<QaUpsertPage mode="create" />} />
+          <Route path="/recruit/qa/:id/edit" element={<QaUpsertPage mode="edit" />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

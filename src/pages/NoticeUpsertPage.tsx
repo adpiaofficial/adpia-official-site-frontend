@@ -13,7 +13,7 @@ function canWriteNotice(role?: string | null) {
   return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
 }
 
-function handleHttpError(e: any, navigate: (to: string) => void) {
+function handleHttpError(e: any, navigate: (to: string, opts?: any) => void) {
   const status = e?.response?.status;
   if (status === 401) return alert("로그인이 필요합니다."), navigate("/login");
   if (status === 403) return alert("권한이 없습니다.");
@@ -30,17 +30,18 @@ export default function NoticeUpsertPage({ mode }: Props) {
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  const [creatingDraft, setCreatingDraft] = useState(false);
 
-  // ✅ create 모드에서는 draft 생성 후 여기 저장
   const [draftId, setDraftId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [pinned, setPinned] = useState(false);
-  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([{ type: "TEXT", sortOrder: 0, text: "" }]);
+  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([
+    { type: "TEXT", sortOrder: 0, text: "" },
+  ]);
 
   const postId = mode === "edit" ? routePostId : draftId;
 
-  // ✅ 권한 체크
   useEffect(() => {
     if (authLoading) return;
 
@@ -57,7 +58,7 @@ export default function NoticeUpsertPage({ mode }: Props) {
     }
   }, [authLoading, user, navigate]);
 
-  // ✅ edit 로드
+  // edit 로드
   useEffect(() => {
     if (mode !== "edit") return;
     if (!Number.isFinite(routePostId)) return;
@@ -89,31 +90,39 @@ export default function NoticeUpsertPage({ mode }: Props) {
     })();
   }, [mode, routePostId, navigate]);
 
-  // ✅ A안: create 모드일 때 draft 먼저 생성 (처음부터 만들고 싶으면 이 useEffect 켜두면 됨)
-  useEffect(() => {
-    if (mode !== "create") return;
-    if (authLoading) return;
-    if (!user) return;
-    if (draftId != null) return;
+  // ✅ 추가기능: create 모드에서 "작성 시작" 누를 때만 draft 생성
+  const ensureDraft = async () => {
+    if (mode !== "create") return postId!;
+    if (draftId != null) return draftId;
 
-    void (async () => {
-      try {
-        // 제목 없더라도 임시로 생성(서버가 NotBlank면 기본값 넣어주기)
-        const initialTitle = title.trim() || "임시 공지";
-        const created = await createRecruitPost("NOTICE", {
-          title: initialTitle,
-          pinned: false,
-        //   blocks: [{ type: "TEXT", sortOrder: 0, text: "" }],
-        });
-        setDraftId(created.id);
-        // draft 제목이 "임시 공지"면 사용자 입력이 없을 때만 반영
-        if (!title.trim()) setTitle(initialTitle);
-      } catch (e: any) {
-        handleHttpError(e, navigate);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, authLoading, user]);
+    if (!title.trim()) {
+      alert("제목을 입력해주세요.");
+      throw new Error("title required");
+    }
+
+    setCreatingDraft(true);
+    try {
+      const created = await createRecruitPost("NOTICE", {
+        title: title.trim(),
+        pinned: false,
+      });
+      setDraftId(created.id);
+      return created.id;
+    } catch (e: any) {
+      handleHttpError(e, navigate);
+      throw e;
+    } finally {
+      setCreatingDraft(false);
+    }
+  };
+
+  const onStartWriting = async () => {
+    try {
+      await ensureDraft();
+    } catch {
+      // ensureDraft에서 alert/handleHttpError 처리
+    }
+  };
 
   const onSubmit = async () => {
     if (!title.trim()) return alert("제목을 입력해주세요.");
@@ -123,14 +132,17 @@ export default function NoticeUpsertPage({ mode }: Props) {
       return;
     }
 
-    if (!postId) {
-      alert("게시글 ID 생성 중입니다. 잠시 후 다시 시도해주세요.");
+    let id: number;
+    try {
+      id = await ensureDraft();
+    } catch {
       return;
     }
 
-    // blocks 정리
     const normalized = normalizeSortOrder(blocks)
-      .filter((b) => (b.type === "TEXT" ? (b.text ?? "").trim().length > 0 : !!(b.url && b.url.trim())))
+      .filter((b) =>
+        b.type === "TEXT" ? (b.text ?? "").trim().length > 0 : !!(b.url && b.url.trim())
+      )
       .map((b) => ({
         ...b,
         text: b.type === "TEXT" ? (b.text ?? "") : undefined,
@@ -145,9 +157,8 @@ export default function NoticeUpsertPage({ mode }: Props) {
 
     setSaving(true);
     try {
-      // ✅ A안: 최종 저장은 PATCH로 통일
-      await updateRecruitPost(postId, req);
-      navigate(`/recruit/notice/${postId}`, { replace: true });
+      await updateRecruitPost(id, req);
+      navigate(`/recruit/notice/${id}`, { replace: true });
     } catch (e: any) {
       handleHttpError(e, navigate);
     } finally {
@@ -156,6 +167,9 @@ export default function NoticeUpsertPage({ mode }: Props) {
   };
 
   const pageTitle = mode === "create" ? "공지 작성" : "공지 수정";
+
+  const ready = !(loading || authLoading);
+  const editorEnabled = mode === "edit" ? true : postId != null; // create는 draft 이후에만
 
   return (
     <div className="pt-24 md:pt-28 max-w-5xl mx-auto px-4 sm:px-6 pb-24">
@@ -181,13 +195,12 @@ export default function NoticeUpsertPage({ mode }: Props) {
         </button>
       </div>
 
-      {(loading || authLoading || (mode === "create" && postId == null)) ? (
+      {!ready ? (
         <div className="mt-6 bg-white border border-gray-100 rounded-2xl shadow-sm p-6 text-sm font-bold text-gray-400">
           준비 중...
         </div>
       ) : (
         <>
-          {/* 상단 입력 카드 */}
           <div className="mt-6 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
             <div className="p-5 md:p-6 border-b border-gray-50">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -198,6 +211,7 @@ export default function NoticeUpsertPage({ mode }: Props) {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="공지 제목을 입력하세요"
                     className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
+                    disabled={saving || creatingDraft}
                   />
                 </div>
 
@@ -207,38 +221,62 @@ export default function NoticeUpsertPage({ mode }: Props) {
                     checked={pinned}
                     onChange={(e) => setPinned(e.target.checked)}
                     className="scale-110"
+                    disabled={saving || creatingDraft}
                   />
                   <span className="text-sm font-black text-gray-700">📌 상단 고정</span>
                 </label>
               </div>
             </div>
+
+            {/* ✅ 추가기능: create에서 draft 없으면 안내 + 작성 시작 버튼 */}
+            {mode === "create" && postId == null && (
+              <div className="p-5 md:p-6 bg-gray-50 border-t border-gray-100">
+                <div className="text-sm font-black text-gray-800">제목을 입력한 뒤 작성 시작을 눌러주세요.</div>
+                <div className="mt-1 text-xs font-bold text-gray-500">
+                  파일 업로드/블록 저장을 위해 게시글 ID가 먼저 필요합니다.
+                </div>
+                <button
+                  onClick={onStartWriting}
+                  disabled={creatingDraft || saving}
+                  className="mt-4 px-5 py-3 rounded-2xl bg-[#813eb6] text-white text-sm font-black disabled:opacity-60"
+                >
+                  {creatingDraft ? "생성 중..." : "작성 시작"}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* 블록 에디터 */}
           <div className="mt-4">
             <BlockEditor
               boardCode="NOTICE"
-              postId={postId!}
+              postId={postId ?? 0}
               value={blocks}
               onChange={setBlocks}
-              disabled={saving}
+              disabled={saving || !editorEnabled}
             />
           </div>
 
-          {/* 하단 버튼 */}
           <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-2">
             <button
               onClick={() => navigate("/recruit/notice")}
               className="px-5 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-600 hover:text-[#813eb6] hover:border-purple-200 transition-all"
+              disabled={saving || creatingDraft}
             >
               취소
             </button>
+
             <button
-              disabled={saving || uploader.isUploading}
+              disabled={saving || creatingDraft || uploader.isUploading}
               onClick={onSubmit}
               className="px-6 py-3 rounded-2xl bg-[#813eb6] text-white text-sm font-black shadow-lg shadow-purple-100 hover:bg-[#3d1d56] transition-all disabled:opacity-60"
             >
-              {uploader.isUploading ? "업로드 중..." : saving ? "저장중..." : "저장"}
+              {uploader.isUploading
+                ? "업로드 중..."
+                : creatingDraft
+                ? "생성 중..."
+                : saving
+                ? "저장중..."
+                : "저장"}
             </button>
           </div>
         </>
