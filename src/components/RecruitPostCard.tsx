@@ -7,6 +7,15 @@ type Props = {
   variant?: "default" | "featured";
 };
 
+function displayAuthor(post: RecruitPost) {
+  // ✅ 백엔드에서 내려주는 표시용 이름(34기 기획부 김상화)을 최우선 사용
+  const name = (post.authorName ?? "").trim();
+  if (name) return name;
+
+  // fallback (혹시 authorName이 비어있을 때만)
+  return post.authorType === "MEMBER" ? "Member" : "Guest";
+}
+
 export default function RecruitPostCard({
   post,
   onClick,
@@ -69,7 +78,7 @@ export default function RecruitPostCard({
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1">
             <span className="text-gray-300">●</span>
-            {post.authorType === "MEMBER" ? "Member" : "Guest"}
+            {displayAuthor(post)}
           </span>
           <span className="text-gray-300">|</span>
           <span className="inline-flex items-center gap-1">

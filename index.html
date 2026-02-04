@@ -1,11 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>adpia-official-site-frontend</title>
+
+    <!-- ✅ Title / Description -->
+    <title>ADPIA 공식 홈페이지</title>
+    <meta
+      name="description"
+      content="여럿이 하나, 애드피아. ADPIA 공식 웹사이트입니다."
+    />
+
+    <!-- ✅ Canonical (배포 도메인에 맞춰) -->
+    <link rel="canonical" href="https://www.adpia.or.kr/" />
+
+    <!-- ✅ Favicon: vite 기본 /vite.svg 대신 ADPIA 로고로 바꾸기 -->
+    <!-- 1) public/favicon.ico or public/favicon.png 를 만들어 두고 아래처럼 -->
+    <link rel="icon" type= "image/png" href="/logo.png" />
+    <!-- png를 쓰면: <link rel="icon" type="image/png" href="/favicon.png" /> -->
+
+    <!-- ✅ Open Graph (카톡/페북/네이버 미리보기) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ADPIA" />
+    <meta property="og:title" content="ADPIA 공식 홈페이지" />
+    <meta
+      property="og:description"
+      content="여럿이 하나, 애드피아. ADPIA 공식 웹사이트입니다."
+    />
+    <meta property="og:url" content="https://www.adpia.or.kr/" />
+    <!-- 2) public/og-image.png 를 넣고 -->
+    <meta property="og:image" content="https://www.adpia.or.kr/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- ✅ Twitter Card (트위터/X 공유 미리보기) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ADPIA 공식 홈페이지" />
+    <meta
+      name="twitter:description"
+      content="여럿이 하나, 애드피아. ADPIA 공식 웹사이트입니다."
+    />
+    <meta name="twitter:image" content="https://www.adpia.or.kr/og-image.png" />
+
+    <!-- ✅ Mobile Address Bar 색상(안드로이드 크롬 등) -->
+    <meta name="theme-color" content="#813eb6" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import type {
-  RecruitBlockRequest,
-  RecruitPost,
-  RecruitPostUpsertRequest,
+import type { RecruitBlockRequest, RecruitPost, RecruitPostUpsertRequest } from "../api/recruitApi";
+import {
+  createRecruitDraft,
+  getRecruitPost,
+  publishRecruitPost,
+  updateRecruitPost,
 } from "../api/recruitApi";
-import { createRecruitPost, getRecruitPost, updateRecruitPost } from "../api/recruitApi";
 import { normalizeSortOrder } from "../lib/blockUtils";
 import BlockEditor from "../components/BlockEditor";
 import useS3Upload from "../hooks/useS3Upload";
@@ -51,27 +52,23 @@ export default function QaUpsertPage({ mode }: Props) {
 
   const [title, setTitle] = useState("");
   const [pinned, setPinned] = useState(false);
-  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([
-    { type: "TEXT", sortOrder: 0, text: "" },
-  ]);
+  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([{ type: "TEXT", sortOrder: 0, text: "" }]);
 
   const [authorName, setAuthorName] = useState("");
   const [secret, setSecret] = useState(true);
   const [password, setPassword] = useState("");
 
-  // ✅ 요구사항: 작성 시작(gate) 먼저 → 그 다음 editor (로그인/비로그인 모두 gate부터)
   const [step, setStep] = useState<"gate" | "editor">(mode === "edit" ? "editor" : "gate");
 
   const postId = mode === "edit" ? routePostId : draftId;
 
-  // ✅ auth 로딩 끝났을 때 gate 정책 유지
   useEffect(() => {
     if (mode !== "create") return;
     if (authLoading) return;
     setStep("gate");
   }, [mode, authLoading]);
 
-  // ✅ edit 로드
+  // edit 로드
   useEffect(() => {
     if (mode !== "edit") return;
     if (!Number.isFinite(routePostId)) return;
@@ -108,7 +105,7 @@ export default function QaUpsertPage({ mode }: Props) {
     })();
   }, [mode, routePostId, navigate, queryPassword]);
 
-  // ✅ gate에서 “작성 시작” 눌렀을 때만 draft 생성
+  // gate에서 “작성 시작” 눌렀을 때만 draft 생성
   const onStartDraft = async () => {
     const isGuest = !user;
 
@@ -120,12 +117,8 @@ export default function QaUpsertPage({ mode }: Props) {
     }
 
     try {
-      // 서버 @NotBlank 회피용 (UI에는 박지 않음)
-      const serverDraftTitle = "__DRAFT__";
-
-      const created = await createRecruitPost("QA", {
-        title: serverDraftTitle,
-        pinned: false,
+      const created = await createRecruitDraft("QA", {
+        title: title.trim(),
         authorName: isGuest ? authorName.trim() : undefined,
         secret,
         password: isGuest && secret ? password.trim() : undefined,
@@ -151,11 +144,7 @@ export default function QaUpsertPage({ mode }: Props) {
     }
 
     const normalized = normalizeSortOrder(blocks)
-      .filter((b) =>
-        b.type === "TEXT"
-          ? (b.text ?? "").trim().length > 0
-          : !!(b.url && b.url.trim())
-      )
+      .filter((b) => (b.type === "TEXT" ? (b.text ?? "").trim().length > 0 : !!(b.url && b.url.trim())))
       .map((b) => ({
         ...b,
         text: b.type === "TEXT" ? (b.text ?? "") : undefined,
@@ -166,22 +155,27 @@ export default function QaUpsertPage({ mode }: Props) {
       title: title.trim(),
       pinned: isAdminRole(user?.role) ? pinned : false,
       blocks: normalized,
-
-      // ✅ 로그인 유저도 secret 가능 (비번은 게스트만)
       secret,
-
       authorName: isGuest ? authorName.trim() : undefined,
       password: isGuest && secret ? password.trim() : undefined,
     };
 
     setSaving(true);
     try {
-      const pwForUpdate =
+      // edit + 게스트 글이면 password 필요
+      const pwForEdit =
         mode === "edit" && post?.authorType === "GUEST"
           ? (queryPassword || password).trim() || undefined
           : undefined;
 
-      await updateRecruitPost(postId, req, pwForUpdate);
+      if (mode === "create") {
+        // create는 draft -> publish
+        const pwForPublish = isGuest && secret ? password.trim() : undefined;
+        await publishRecruitPost(postId, req, pwForPublish);
+      } else {
+        await updateRecruitPost(postId, req, pwForEdit);
+      }
+
       navigate(`/recruit/qa/${postId}`, { replace: true });
     } catch (e: any) {
       handleHttpError(e, navigate);
@@ -343,7 +337,6 @@ export default function QaUpsertPage({ mode }: Props) {
                     </div>
                   </div>
 
-                  {/* edit 모드에서 게스트 글이라면 (queryPassword 없을 때) */}
                   {mode === "edit" && post?.authorType === "GUEST" && !queryPassword && (
                     <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
                       <div className="text-sm font-black text-amber-900">비밀글 수정</div>
@@ -353,7 +346,6 @@ export default function QaUpsertPage({ mode }: Props) {
                     </div>
                   )}
 
-                  {/* editor 화면에서도 비밀번호 입력은 “게스트 + 비밀글”일 때만 */}
                   {!user && secret && (
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-3">
                       <div className="md:col-span-5">
@@ -395,13 +387,7 @@ export default function QaUpsertPage({ mode }: Props) {
               </div>
 
               <div className="mt-4">
-                <BlockEditor
-                  boardCode="QA"
-                  postId={postId!}
-                  value={blocks}
-                  onChange={setBlocks}
-                  disabled={saving}
-                />
+                <BlockEditor boardCode="QA" postId={postId!} value={blocks} onChange={setBlocks} disabled={saving} />
               </div>
 
               <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-end gap-2">

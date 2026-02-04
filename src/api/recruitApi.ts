@@ -14,6 +14,8 @@ export type PageResponse<T> = {
 
 export type RecruitBoardCode = "NOTICE" | "QA";
 
+export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
+
 export type RecruitBlockType = "TEXT" | "FILE" | "IMAGE" | "VIDEO" | "EMBED" | "LINK";
 
 export type RecruitBlockRequest = {
@@ -35,6 +37,7 @@ export type RecruitBlockResponse = {
 export type RecruitPost = {
   id: number;
   boardCode: RecruitBoardCode;
+  status?: RecruitPostStatus; // ✅ 추가 (백이 내려주면 사용)
   title: string;
 
   authorMemberId?: number | null;
@@ -70,6 +73,14 @@ export type RecruitPostUpsertRequest = {
   blocks?: RecruitBlockRequest[];
 };
 
+/** ✅ Draft 생성 요청 */
+export type RecruitDraftCreateRequest = {
+  title?: string;
+  authorName?: string;
+  secret?: boolean;
+  password?: string;
+};
+
 /** 목록 */
 export async function getRecruitPosts(boardCode: RecruitBoardCode, page = 0, size = 10) {
   const res = await httpClient.get<PageResponse<RecruitPost>>(`/recruit/${boardCode}/posts`, {
@@ -86,13 +97,21 @@ export async function getRecruitPost(id: number, password?: string) {
   return res.data;
 }
 
-/** 작성(draft) */
-export async function createRecruitPost(boardCode: RecruitBoardCode, req: RecruitPostUpsertRequest) {
-  const res = await httpClient.post<RecruitPost>(`/recruit/${boardCode}/posts`, req);
+/** ✅ Draft 생성: "작성 시작" 눌렀을 때만 호출 */
+export async function createRecruitDraft(boardCode: RecruitBoardCode, req: RecruitDraftCreateRequest) {
+  const res = await httpClient.post<RecruitPost>(`/recruit/${boardCode}/draft`, req);
   return res.data;
 }
 
-/** 수정 */
+/** ✅ 발행(PUBLISH): draftId를 최종 저장(발행)로 전환 */
+export async function publishRecruitPost(id: number, req: RecruitPostUpsertRequest, password?: string) {
+  const res = await httpClient.post<RecruitPost>(`/recruit/posts/${id}/publish`, req, {
+    params: password ? { password } : undefined,
+  });
+  return res.data;
+}
+
+/** 수정 (발행글 수정) */
 export async function updateRecruitPost(id: number, req: RecruitPostUpsertRequest, password?: string) {
   const res = await httpClient.patch<RecruitPost>(`/recruit/posts/${id}`, req, {
     params: password ? { password } : undefined,

@@ -3,10 +3,16 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 
-type NavItem = {
+type SubMenu = {
   name: string;
   path: string;
-  subMenus: { name: string; path: string }[];
+  external?: boolean;
+};
+
+type NavItem = {
+  name: string;
+  path: string; // 상위는 이동 안 하므로 "대표 path"로 active 판별만 씀
+  subMenus: SubMenu[];
 };
 
 export default function Navbar() {
@@ -24,6 +30,7 @@ export default function Navbar() {
         name: "ADPIA",
         path: "/about",
         subMenus: [
+          { name: "소개", path: "/about" },
           { name: "연혁", path: "/about/history" },
           { name: "회칙", path: "/about/rules" },
           { name: "보도자료", path: "/about/news" },
@@ -50,6 +57,11 @@ export default function Navbar() {
           { name: "백문백답", path: "/archive/qna" },
           { name: "3분 스피치", path: "/archive/speech" },
           { name: "광고학개론", path: "/archive/intro" },
+          {
+            name: "N cafe",
+            path: "https://cafe.naver.com/adpiaofficial",
+            external: true,
+          },
         ],
       },
       {
@@ -66,7 +78,6 @@ export default function Navbar() {
         path: "/recruit",
         subMenus: [
           { name: "공지사항", path: "/recruit/notice" },
-          // ✅ App 라우트랑 맞춤 (/recruit/qa)
           { name: "Q&A", path: "/recruit/qa" },
         ],
       },
@@ -79,6 +90,14 @@ export default function Navbar() {
   const closeMobile = () => {
     setMobileOpen(false);
     setMobileAccordion(null);
+  };
+
+  const go = (sub: SubMenu) => {
+    if (sub.external) {
+      window.open(sub.path, "_blank", "noopener,noreferrer");
+      return;
+    }
+    navigate(sub.path);
   };
 
   return (
@@ -94,11 +113,10 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Center: Desktop menu */}
+        {/* Center: Desktop menu (상위 클릭은 이동 X) */}
         <div className="hidden md:flex items-center justify-center gap-10 h-full">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
-            const isRecruit = item.name === "RECRUIT";
 
             return (
               <div
@@ -106,54 +124,55 @@ export default function Navbar() {
                 className="relative h-full flex items-center"
                 onMouseEnter={() => setActiveMenu(item.name)}
               >
-                {/* ✅ RECRUIT는 클릭해도 이동 X (드롭다운 토글만) */}
-                {isRecruit ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setActiveMenu((cur) => (cur === item.name ? null : item.name));
-                    }}
-                    className={`font-black tracking-widest transition-all h-full flex items-center ${
-                      isActive || activeMenu === item.name
-                        ? "text-[#813eb6] text-[16px]"
-                        : "text-gray-600 text-[14px]"
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={`font-black tracking-widest transition-all h-full flex items-center ${
-                      isActive || activeMenu === item.name
-                        ? "text-[#813eb6] text-[16px]"
-                        : "text-gray-600 text-[14px]"
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                )}
+                {/* ✅ 상위는 버튼: 클릭 시 이동 X, 드롭다운 토글만 */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveMenu((cur) => (cur === item.name ? null : item.name));
+                  }}
+                  className={`font-black tracking-widest transition-all h-full flex items-center ${
+                    isActive || activeMenu === item.name
+                      ? "text-[#813eb6] text-[16px]"
+                      : "text-gray-600 text-[14px]"
+                  }`}
+                >
+                  {item.name}
+                </button>
 
                 {/* dropdown */}
                 <div
-                  className={`absolute top-20 left-1/2 -translate-x-1/2 w-44 bg-white rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.1)] p-5 border border-gray-50 transition-all duration-300 transform origin-top ${
+                  className={`absolute top-20 left-1/2 -translate-x-1/2 w-52 bg-white rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.1)] p-5 border border-gray-50 transition-all duration-300 transform origin-top ${
                     activeMenu === item.name
                       ? "opacity-100 scale-100 visible"
                       : "opacity-0 scale-95 invisible"
                   }`}
                 >
                   <div className="flex flex-col space-y-1">
-                    {item.subMenus.map((sub) => (
-                      <Link
-                        key={sub.name}
-                        to={sub.path}
-                        onClick={() => setActiveMenu(null)} // ✅ 클릭하면 드롭다운 닫기
-                        className="px-4 py-2.5 text-[13px] font-bold text-gray-400 hover:text-[#813eb6] hover:bg-purple-50 rounded-2xl transition-all whitespace-nowrap"
-                      >
-                        {sub.name}
-                      </Link>
-                    ))}
+                    {item.subMenus.map((sub) =>
+                      sub.external ? (
+                        <button
+                          key={sub.name}
+                          type="button"
+                          onClick={() => {
+                            setActiveMenu(null);
+                            window.open(sub.path, "_blank", "noopener,noreferrer");
+                          }}
+                          className="text-left px-4 py-2.5 text-[13px] font-bold text-gray-400 hover:text-[#813eb6] hover:bg-purple-50 rounded-2xl transition-all whitespace-nowrap"
+                        >
+                          {sub.name}
+                        </button>
+                      ) : (
+                        <Link
+                          key={sub.name}
+                          to={sub.path}
+                          onClick={() => setActiveMenu(null)}
+                          className="px-4 py-2.5 text-[13px] font-bold text-gray-400 hover:text-[#813eb6] hover:bg-purple-50 rounded-2xl transition-all whitespace-nowrap"
+                        >
+                          {sub.name}
+                        </Link>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -161,20 +180,29 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Right: Desktop auth */}
-        <div className="hidden md:flex items-center gap-6">
+        {/* Right: Desktop auth + admin buttons */}
+        <div className="hidden md:flex items-center gap-4">
           {loading ? (
             <span className="text-xs text-gray-400 font-bold">로딩중...</span>
           ) : user ? (
             <div className="flex items-center gap-4">
-              {/* ✅ 관리자일 때만 회원관리 버튼 */}
+              {/* ✅ 관리자 버튼들 */}
               {isSuperAdmin && (
-                <button
-                  onClick={() => navigate("/admin/members")}
-                  className="text-[12px] font-black text-[#813eb6] bg-purple-50 px-4 py-2 rounded-full border border-purple-100 hover:bg-purple-100 transition-all"
-                >
-                  회원관리
-                </button>
+                <>
+                  <button
+                    onClick={() => navigate("/admin/members")}
+                    className="text-[12px] font-black text-[#813eb6] bg-purple-50 px-4 py-2 rounded-full border border-purple-100 hover:bg-purple-100 transition-all"
+                  >
+                    회원관리
+                  </button>
+
+                  <button
+                    onClick={() => navigate("/admin/popup")}
+                    className="text-[12px] font-black text-gray-700 bg-white px-4 py-2 rounded-full border border-gray-200 hover:border-[#813eb6] hover:text-[#813eb6] transition-all"
+                  >
+                    팝업관리
+                  </button>
+                </>
               )}
 
               <span className="text-[12px] font-black text-gray-800 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
@@ -209,7 +237,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile: hamburger + simple auth */}
+        {/* Mobile */}
         <div className="md:hidden flex items-center gap-2">
           {user && (
             <button
@@ -235,7 +263,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">
           <div className="px-4 py-4 space-y-2">
-            {/* auth area */}
+            {/* auth */}
             {loading ? (
               <div className="text-sm text-gray-400 font-bold py-2">로딩중...</div>
             ) : user ? (
@@ -279,15 +307,26 @@ export default function Navbar() {
 
             {/* admin */}
             {user && isSuperAdmin && (
-              <button
-                onClick={() => {
-                  closeMobile();
-                  navigate("/admin/members");
-                }}
-                className="w-full px-4 py-2 rounded-xl bg-purple-50 border border-purple-100 text-sm font-black text-[#813eb6]"
-              >
-                회원관리
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    closeMobile();
+                    navigate("/admin/members");
+                  }}
+                  className="w-full px-4 py-2 rounded-xl bg-purple-50 border border-purple-100 text-sm font-black text-[#813eb6]"
+                >
+                  회원관리
+                </button>
+                <button
+                  onClick={() => {
+                    closeMobile();
+                    navigate("/admin/popup");
+                  }}
+                  className="w-full px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-black text-gray-700"
+                >
+                  팝업관리
+                </button>
+              </div>
             )}
 
             {/* nav accordion */}
@@ -295,14 +334,9 @@ export default function Navbar() {
               {navItems.map((item) => {
                 const open = mobileAccordion === item.name;
                 return (
-                  <div
-                    key={item.name}
-                    className="border border-gray-100 rounded-2xl mb-2 overflow-hidden"
-                  >
+                  <div key={item.name} className="border border-gray-100 rounded-2xl mb-2 overflow-hidden">
                     <button
-                      onClick={() =>
-                        setMobileAccordion((cur) => (cur === item.name ? null : item.name))
-                      }
+                      onClick={() => setMobileAccordion((cur) => (cur === item.name ? null : item.name))}
                       className="w-full flex items-center justify-between px-4 py-3 text-sm font-black text-gray-800 bg-white"
                     >
                       {item.name}
@@ -312,14 +346,17 @@ export default function Navbar() {
                     {open && (
                       <div className="px-3 pb-3">
                         {item.subMenus.map((sub) => (
-                          <Link
+                          <button
                             key={sub.name}
-                            to={sub.path}
-                            onClick={closeMobile}
-                            className="block px-3 py-2 rounded-xl text-sm font-bold text-gray-600 hover:bg-purple-50 hover:text-[#813eb6]"
+                            type="button"
+                            onClick={() => {
+                              closeMobile();
+                              go(sub);
+                            }}
+                            className="block w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-gray-600 hover:bg-purple-50 hover:text-[#813eb6]"
                           >
                             {sub.name}
-                          </Link>
+                          </button>
                         ))}
                       </div>
                     )}

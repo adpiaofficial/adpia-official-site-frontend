@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import type { RecruitBlockRequest, RecruitPostUpsertRequest } from "../api/recruitApi";
-import { createRecruitPost, getRecruitPost, updateRecruitPost } from "../api/recruitApi";
+import {
+  createRecruitDraft,
+  getRecruitPost,
+  publishRecruitPost,
+  updateRecruitPost,
+} from "../api/recruitApi";
 import { normalizeSortOrder } from "../lib/blockUtils";
 import BlockEditor from "../components/BlockEditor";
 import useS3Upload from "../hooks/useS3Upload";
@@ -36,12 +41,22 @@ export default function NoticeUpsertPage({ mode }: Props) {
 
   const [title, setTitle] = useState("");
   const [pinned, setPinned] = useState(false);
-  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([
-    { type: "TEXT", sortOrder: 0, text: "" },
-  ]);
+  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([{ type: "TEXT", sortOrder: 0, text: "" }]);
 
   const postId = mode === "edit" ? routePostId : draftId;
 
+  // ===============================
+  // ✅ 중복 생성 방지용 refs
+  // ===============================
+  const draftPromiseRef = useRef<Promise<number> | null>(null);
+  const draftIdRef = useRef<number | null>(null);
+  const submitLockRef = useRef(false);
+
+  useEffect(() => {
+    draftIdRef.current = draftId;
+  }, [draftId]);
+
+  // 권한 가드
   useEffect(() => {
     if (authLoading) return;
 
@@ -90,10 +105,14 @@ export default function NoticeUpsertPage({ mode }: Props) {
     })();
   }, [mode, routePostId, navigate]);
 
-  // ✅ 추가기능: create 모드에서 "작성 시작" 누를 때만 draft 생성
+  // ✅ draft 생성은 반드시 단 1회만
   const ensureDraft = async () => {
     if (mode !== "create") return postId!;
-    if (draftId != null) return draftId;
+
+    const existing = draftIdRef.current;
+    if (existing != null) return existing;
+
+    if (draftPromiseRef.current) return draftPromiseRef.current;
 
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
@@ -101,75 +120,97 @@ export default function NoticeUpsertPage({ mode }: Props) {
     }
 
     setCreatingDraft(true);
-    try {
-      const created = await createRecruitPost("NOTICE", {
-        title: title.trim(),
-        pinned: false,
-      });
-      setDraftId(created.id);
-      return created.id;
-    } catch (e: any) {
-      handleHttpError(e, navigate);
-      throw e;
-    } finally {
-      setCreatingDraft(false);
-    }
+
+    const p = (async () => {
+      try {
+        const created = await createRecruitDraft("NOTICE", { title: title.trim() });
+        setDraftId(created.id);
+        draftIdRef.current = created.id;
+        return created.id;
+      } catch (e: any) {
+        handleHttpError(e, navigate);
+        throw e;
+      } finally {
+        setCreatingDraft(false);
+        draftPromiseRef.current = null;
+      }
+    })();
+
+    draftPromiseRef.current = p;
+    return p;
   };
 
   const onStartWriting = async () => {
     try {
       await ensureDraft();
     } catch {
-      // ensureDraft에서 alert/handleHttpError 처리
+      // ensureDraft 내부에서 처리
     }
   };
 
   const onSubmit = async () => {
-    if (!title.trim()) return alert("제목을 입력해주세요.");
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
 
-    if (uploader.isUploading) {
-      alert("파일 업로드가 끝난 뒤 저장할 수 있어요.");
-      return;
-    }
-
-    let id: number;
     try {
-      id = await ensureDraft();
-    } catch {
-      return;
-    }
+      if (!title.trim()) {
+        alert("제목을 입력해주세요.");
+        return;
+      }
 
-    const normalized = normalizeSortOrder(blocks)
-      .filter((b) =>
-        b.type === "TEXT" ? (b.text ?? "").trim().length > 0 : !!(b.url && b.url.trim())
-      )
-      .map((b) => ({
-        ...b,
-        text: b.type === "TEXT" ? (b.text ?? "") : undefined,
-        url: b.type !== "TEXT" ? (b.url ?? "") : undefined,
-      }));
+      if (uploader.isUploading) {
+        alert("파일 업로드가 끝난 뒤 저장할 수 있어요.");
+        return;
+      }
 
-    const req: RecruitPostUpsertRequest = {
-      title: title.trim(),
-      pinned,
-      blocks: normalized,
-    };
+      // create 모드면 draft 확보
+      let realId: number = postId ?? 0;
+      if (mode === "create") {
+        try {
+          realId = await ensureDraft();
+        } catch {
+          return;
+        }
+      }
 
-    setSaving(true);
-    try {
-      await updateRecruitPost(id, req);
-      navigate(`/recruit/notice/${id}`, { replace: true });
-    } catch (e: any) {
-      handleHttpError(e, navigate);
+      const normalized = normalizeSortOrder(blocks)
+        .filter((b) =>
+          b.type === "TEXT" ? (b.text ?? "").trim().length > 0 : !!(b.url && b.url.trim())
+        )
+        .map((b) => ({
+          ...b,
+          text: b.type === "TEXT" ? (b.text ?? "") : undefined,
+          url: b.type !== "TEXT" ? (b.url ?? "") : undefined,
+        }));
+
+      const req: RecruitPostUpsertRequest = {
+        title: title.trim(),
+        pinned,
+        blocks: normalized,
+      };
+
+      setSaving(true);
+      try {
+        if (mode === "create") {
+          await publishRecruitPost(realId, req);
+        } else {
+          await updateRecruitPost(realId, req);
+        }
+        navigate(`/recruit/notice/${realId}`, { replace: true });
+      } catch (e: any) {
+        handleHttpError(e, navigate);
+      } finally {
+        setSaving(false);
+      }
     } finally {
-      setSaving(false);
+      submitLockRef.current = false;
     }
   };
 
   const pageTitle = mode === "create" ? "공지 작성" : "공지 수정";
 
   const ready = !(loading || authLoading);
-  const editorEnabled = mode === "edit" ? true : postId != null; // create는 draft 이후에만
+  const editorEnabled = mode === "edit" ? true : postId != null;
 
   return (
     <div className="pt-24 md:pt-28 max-w-5xl mx-auto px-4 sm:px-6 pb-24">
@@ -228,7 +269,6 @@ export default function NoticeUpsertPage({ mode }: Props) {
               </div>
             </div>
 
-            {/* ✅ 추가기능: create에서 draft 없으면 안내 + 작성 시작 버튼 */}
             {mode === "create" && postId == null && (
               <div className="p-5 md:p-6 bg-gray-50 border-t border-gray-100">
                 <div className="text-sm font-black text-gray-800">제목을 입력한 뒤 작성 시작을 눌러주세요.</div>
@@ -270,13 +310,7 @@ export default function NoticeUpsertPage({ mode }: Props) {
               onClick={onSubmit}
               className="px-6 py-3 rounded-2xl bg-[#813eb6] text-white text-sm font-black shadow-lg shadow-purple-100 hover:bg-[#3d1d56] transition-all disabled:opacity-60"
             >
-              {uploader.isUploading
-                ? "업로드 중..."
-                : creatingDraft
-                ? "생성 중..."
-                : saving
-                ? "저장중..."
-                : "저장"}
+              {uploader.isUploading ? "업로드 중..." : creatingDraft ? "생성 중..." : saving ? "저장중..." : "저장"}
             </button>
           </div>
         </>

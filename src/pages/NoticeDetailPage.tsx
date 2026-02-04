@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteRecruitPost, getRecruitPost, type RecruitPost } from "../api/recruitApi";
 import { useAuth } from "../contexts/AuthContext";
@@ -33,13 +33,22 @@ export default function NoticeDetailPage() {
 
   const canEdit = useMemo(() => (post ? canEditNotice(user, post) : false), [user, post]);
 
+  const lastFetchedIdRef = useRef<number | null>(null);
+
   useEffect(() => {
+    if (!Number.isFinite(postId)) return;
+
+    if (lastFetchedIdRef.current === postId) return;
+    lastFetchedIdRef.current = postId;
+
     const run = async () => {
       setLoading(true);
       try {
         const data = await getRecruitPost(postId);
         setPost(data);
       } catch (e: any) {
+        lastFetchedIdRef.current = null;
+
         alert(e?.response?.data?.message || "공지 조회 실패");
         navigate("/recruit/notice", { replace: true });
       } finally {
@@ -47,9 +56,8 @@ export default function NoticeDetailPage() {
       }
     };
 
-    if (Number.isFinite(postId)) run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId]);
+    void run();
+  }, [postId, navigate]);
 
   const onDelete = async () => {
     if (!post) return;

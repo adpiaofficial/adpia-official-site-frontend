@@ -8,7 +8,9 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
 import AdminMembersPage from "./pages/AdminMembersPage";
+import AdminPopupEditPage from "./pages/AdminPopupEditPage";
 import AdminRoute from "./components/AdminRoute";
+
 
 import NoticeListPage from "./pages/NoticeListPage";
 import NoticeDetailPage from "./pages/NoticeDetailPage";
@@ -56,6 +58,7 @@ function App() {
           <Route path="/recruit/notice/new" element={<NoticeUpsertPage mode="create" />} />
           <Route path="/recruit/notice/:id/edit" element={<NoticeUpsertPage mode="edit" />} />
 
+          {/* ✅ QA */}
           <Route path="/recruit/qa" element={<QaListPage />} />
           <Route path="/recruit/qa/:id" element={<QaDetailPage />} />
           <Route path="/recruit/qa/new" element={<QaUpsertPage mode="create" />} />
@@ -64,11 +67,22 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
 
+          {/* ✅ ADMIN */}
           <Route
             path="/admin/members"
             element={
               <AdminRoute>
                 <AdminMembersPage />
+              </AdminRoute>
+            }
+          />
+
+          {/* ✅ NEW: 팝업 관리 (작성/수정 단일 페이지) */}
+          <Route
+            path="/admin/popup"
+            element={
+              <AdminRoute>
+                <AdminPopupEditPage />
               </AdminRoute>
             }
           />

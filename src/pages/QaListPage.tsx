@@ -17,7 +17,9 @@ export default function QaListPage() {
   const [pageData, setPageData] = useState<PageResponse<RecruitPost> | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(12);
+
+  // ✅ 12번: 15 / 30
+  const [size, setSize] = useState(15);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"latest" | "views">("latest");
@@ -75,6 +77,9 @@ export default function QaListPage() {
     }
   };
 
+  // ✅ 글번호(최신글=1) 계산: 현재 페이지 기준 연속 번호
+  const calcDisplayNo = (indexInPage: number) => page * size + indexInPage + 1;
+
   return (
     <div className="pt-24 md:pt-28 max-w-5xl mx-auto px-4 sm:px-6 pb-24">
       <div className="flex items-start justify-between gap-4">
@@ -83,12 +88,9 @@ export default function QaListPage() {
             <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-xs font-black text-[#813eb6]">
               Recruit
             </span>
-            <span className="text-xs font-black text-gray-400">Q&amp;A</span>
           </div>
           <h1 className="mt-2 text-2xl md:text-3xl font-black text-gray-900">Q&amp;A</h1>
-          <p className="mt-1 text-sm font-bold text-gray-500">
-            외부 문의/질문을 남길 수 있습니다. 비밀글은 비밀번호로 보호됩니다.
-          </p>
+          <p className="mt-1 text-sm font-bold text-gray-500"></p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -98,9 +100,8 @@ export default function QaListPage() {
             className="px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-700"
             title="페이지당 개수"
           >
-            <option value={10}>10개</option>
-            <option value={12}>12개</option>
-            <option value={20}>20개</option>
+            <option value={15}>15개</option>
+            <option value={30}>30개</option>
           </select>
         </div>
       </div>
@@ -192,13 +193,16 @@ export default function QaListPage() {
               <div className="col-span-9 md:col-span-10">제목</div>
             </div>
 
-            {filtered.map((p) => (
+            {filtered.map((p, index) => (
               <div
                 key={p.id}
                 className="grid grid-cols-12 px-5 py-4 hover:bg-purple-50/40 cursor-pointer"
                 onClick={() => navigate(`/recruit/qa/${p.id}`)}
               >
-                <div className="col-span-3 md:col-span-2 text-sm font-black text-gray-700">{p.id}</div>
+                {/* ✅ 글번호: id 대신 연속 번호 */}
+                <div className="col-span-3 md:col-span-2 text-sm font-black text-gray-700">
+                  {calcDisplayNo(index)}
+                </div>
 
                 <div className="col-span-9 md:col-span-10 flex items-center gap-2 min-w-0">
                   {p.pinned && (

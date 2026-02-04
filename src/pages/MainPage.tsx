@@ -4,14 +4,19 @@ import logoWhite from "../assets/logowhite.png";
 
 import { getRecruitPosts, type RecruitPost, type PageResponse } from "../api/recruitApi";
 
-type NoticeSource = "RECRUIT_NOTICE" | "COMMUNITY_NOTICE"; 
+// ✅ 팝업
+import { getActivePopup, type PopupResponse } from "../api/popupApi";
+import HomePopupModal from "../components/HomePopupModal";
+import { isDismissedToday } from "../lib/popupDismiss";
+
+type NoticeSource = "RECRUIT_NOTICE" | "COMMUNITY_NOTICE";
 
 type NoticeCardVM = {
   id: number;
   title: string;
-  date: string;        
+  date: string;
   source: NoticeSource;
-  href: string;        
+  href: string;
 };
 
 function formatDate(iso: string) {
@@ -34,7 +39,6 @@ function sourceLabel(source: NoticeSource) {
   }
 }
 
-/** source → 컬러(원하면 소스별 구분) */
 function sourceColor(source: NoticeSource) {
   switch (source) {
     case "RECRUIT_NOTICE":
@@ -46,7 +50,6 @@ function sourceColor(source: NoticeSource) {
   }
 }
 
-
 const ACTIVITY_PHOTOS = {
   main: { title: "정기 세미나 현장", desc: "COMMUNITY > 활동 사진의 최신 게시물을 가져옵니다." },
   sub1: { title: "애드찬스", desc: "COMMUNITY > 애드찬스" },
@@ -56,17 +59,45 @@ const ACTIVITY_PHOTOS = {
 const MainPage: React.FC = () => {
   const navigate = useNavigate();
 
-  /** ✅ 최신 공지 2개 (여러 소스 합칠 수 있게 VM으로 관리) */
+  // ✅ 최신 공지 2개
   const [notices, setNotices] = useState<NoticeCardVM[]>([]);
   const [noticeLoading, setNoticeLoading] = useState(true);
 
+  // ✅ 팝업 상태
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popup, setPopup] = useState<PopupResponse | null>(null);
+
+  // ✅ 메인 팝업 로드
   useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const p = await getActivePopup();
+        if (!alive) return;
+
+        if (!p) return;
+        if (isDismissedToday(p.id)) return;
+
+        setPopup(p);
+        setPopupOpen(true);
+      } catch {
+        // 팝업 실패는 메인 영향 없이 무시
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ✅ 공지 로드
+  useEffect(() => {
+    let alive = true;
+
     const loadNotices = async () => {
       setNoticeLoading(true);
       try {
-        // ✅ Recruit 공지사항 최신 2개 가져오기
-        // 백에서 pinned desc + created desc 정렬이므로,
-        // pinned가 있으면 먼저 오고, 그 뒤 최신이 따라옴.
         const data: PageResponse<RecruitPost> = await getRecruitPosts("NOTICE", 0, 2);
 
         const recruitNotices: NoticeCardVM[] = (data.content ?? []).map((p) => ({
@@ -77,33 +108,39 @@ const MainPage: React.FC = () => {
           href: `/recruit/notice/${p.id}`,
         }));
 
-        // ✅ 나중에 커뮤니티 공지도 붙이면 여기서 합치면 됨
-        // const communityNotices = await getCommunityNotices(...).map(...)
-        // const merged = [...recruitNotices, ...communityNotices];
-
+        if (!alive) return;
         setNotices(recruitNotices);
-      } catch (e) {
-        // 실패해도 메인페이지는 살아있게
+      } catch {
+        if (!alive) return;
         setNotices([]);
       } finally {
+        if (!alive) return;
         setNoticeLoading(false);
       }
     };
 
     void loadNotices();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  /** 카드에 보여줄 4칸 UI 유지하고 싶으면 2개만 가져온 걸 2개만 렌더링하면 됨
-   *  여기서는 "요구대로 2개만" 보여줌
-   */
   const noticeCards = useMemo(() => notices.slice(0, 2), [notices]);
 
   return (
     <div className="font-noto bg-white pt-20 overflow-hidden">
+      {/* ✅ HOME POPUP */}
+      {popupOpen && popup && <HomePopupModal popup={popup} onClose={() => setPopupOpen(false)} />}
+
       {/* [SECTION 1] HERO */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-[#f3ebff] via-[#d6bcfa] to-[#813eb6]">
         <div className="absolute top-[-5%] right-[-5%] w-[700px] h-[700px] opacity-10 pointer-events-none select-none">
-          <img src={logoWhite} alt="" className="w-full h-full object-contain rotate-12 grayscale brightness-200" />
+          <img
+            src={logoWhite}
+            alt=""
+            className="w-full h-full object-contain rotate-12 grayscale brightness-200"
+          />
         </div>
 
         <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 text-white">
@@ -136,7 +173,7 @@ const MainPage: React.FC = () => {
         </div>
       </section>
 
-      {/* [SECTION 2] NOTICE - Recruit 공지사항 최신 2개 */}
+      {/* [SECTION 2] NOTICE */}
       <section className="py-24 max-w-7xl mx-auto px-8">
         <div className="flex justify-between items-end mb-16">
           <div>
@@ -145,7 +182,6 @@ const MainPage: React.FC = () => {
             </h2>
           </div>
 
-          {/* ✅ 전체보기: 지금은 Recruit 공지로 연결 */}
           <button
             onClick={() => navigate("/recruit/notice")}
             className="text-gray-400 font-bold text-sm hover:text-[#813eb6] transition-colors border-b-2 border-transparent hover:border-[#813eb6] pb-1"
@@ -154,7 +190,6 @@ const MainPage: React.FC = () => {
           </button>
         </div>
 
-        {/* ✅ 로딩/실패 처리 */}
         {noticeLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {Array.from({ length: 2 }).map((_, i) => (
@@ -177,12 +212,8 @@ const MainPage: React.FC = () => {
                 className="group bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col h-full"
               >
                 <div className={`${sourceColor(news.source)} p-5 flex justify-between items-center text-white`}>
-                  <span className="font-bold text-[10px] tracking-widest uppercase">
-                    {sourceLabel(news.source)}
-                  </span>
-                  <span className="text-2xl font-black opacity-20 italic">
-                    #{String(idx + 1).padStart(2, "0")}
-                  </span>
+                  <span className="font-bold text-[10px] tracking-widest uppercase">{sourceLabel(news.source)}</span>
+                  <span className="text-2xl font-black opacity-20 italic">#{String(idx + 1).padStart(2, "0")}</span>
                 </div>
 
                 <div className="p-8 flex flex-col flex-grow justify-between bg-white">
@@ -247,8 +278,12 @@ const MainPage: React.FC = () => {
                 <span className="text-[#813eb6] font-black text-5xl mb-4 italic font-montserrat group-hover:animate-bounce">
                   A+
                 </span>
-                <p className="text-gray-900 font-black text-xl uppercase tracking-tighter italic mb-1">{ACTIVITY_PHOTOS.sub2.title}</p>
-                <p className="text-gray-400 text-xs font-medium italic opacity-60 uppercase tracking-widest">Archive records</p>
+                <p className="text-gray-900 font-black text-xl uppercase tracking-tighter italic mb-1">
+                  {ACTIVITY_PHOTOS.sub2.title}
+                </p>
+                <p className="text-gray-400 text-xs font-medium italic opacity-60 uppercase tracking-widest">
+                  Archive records
+                </p>
               </div>
             </div>
           </div>

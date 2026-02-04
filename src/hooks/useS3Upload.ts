@@ -1,12 +1,9 @@
-// src/hooks/useS3Upload.ts
 import { useCallback, useMemo, useState } from "react";
 import { presignFile } from "../api/fileApi";
 import { uploadToS3Put } from "../lib/s3Uploader";
 import type { RecruitBoardCode, RecruitBlockType } from "../api/recruitApi";
 
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
-
-// ✅ 업로드로 만들어질 수 있는 블록 타입은 3개뿐
 export type UploadBlockType = Extract<RecruitBlockType, "IMAGE" | "VIDEO" | "FILE">;
 
 export type UploadItem = {
@@ -14,12 +11,13 @@ export type UploadItem = {
   file: File;
   boardCode: RecruitBoardCode;
   postId: number;
-
   blockType: UploadBlockType;
   status: UploadStatus;
-
   putUrl?: string;
   fileUrl?: string;
+  key?: string;
+  contentType?: string;
+  originalFilename?: string;
   error?: string;
 };
 
@@ -36,10 +34,7 @@ export function guessMediaBlockType(file: File): UploadBlockType {
 export default function useS3Upload() {
   const [items, setItems] = useState<UploadItem[]>([]);
 
-  const isUploading = useMemo(
-    () => items.some((it) => it.status === "uploading"),
-    [items]
-  );
+  const isUploading = useMemo(() => items.some((it) => it.status === "uploading"), [items]);
 
   const addAndUpload = useCallback(
     async (params: { boardCode: RecruitBoardCode; postId: number; file: File }) => {
@@ -59,10 +54,12 @@ export default function useS3Upload() {
       setItems((cur) => [initial, ...cur]);
 
       try {
+        const contentType = file.type || "application/octet-stream";
+
         const presigned = await presignFile({
           boardCode,
           postId,
-          contentType: file.type || "application/octet-stream",
+          contentType,
           originalFilename: file.name,
         });
 
@@ -76,20 +73,26 @@ export default function useS3Upload() {
                   status: "success",
                   putUrl: presigned.putUrl,
                   fileUrl: presigned.fileUrl,
+                  key: presigned.key,
+                  contentType,
+                  originalFilename: file.name,
                   error: undefined,
                 }
               : it
           )
         );
 
-        return { uploadId: id, blockType, fileUrl: presigned.fileUrl };
+        return {
+          uploadId: id,
+          blockType,
+          fileUrl: presigned.fileUrl,
+          key: presigned.key,
+          contentType,
+          originalFilename: file.name,
+        };
       } catch (e: any) {
         setItems((cur) =>
-          cur.map((it) =>
-            it.id === id
-              ? { ...it, status: "error", error: e?.message ?? "upload failed" }
-              : it
-          )
+          cur.map((it) => (it.id === id ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it))
         );
         throw e;
       }
@@ -102,17 +105,15 @@ export default function useS3Upload() {
       const target = items.find((x) => x.id === uploadId);
       if (!target) return;
 
-      setItems((cur) =>
-        cur.map((it) =>
-          it.id === uploadId ? { ...it, status: "uploading", error: undefined } : it
-        )
-      );
+      setItems((cur) => cur.map((it) => (it.id === uploadId ? { ...it, status: "uploading", error: undefined } : it)));
 
       try {
+        const contentType = target.file.type || "application/octet-stream";
+
         const presigned = await presignFile({
           boardCode: target.boardCode,
           postId: target.postId,
-          contentType: target.file.type || "application/octet-stream",
+          contentType,
           originalFilename: target.file.name,
         });
 
@@ -121,17 +122,31 @@ export default function useS3Upload() {
         setItems((cur) =>
           cur.map((it) =>
             it.id === uploadId
-              ? { ...it, status: "success", putUrl: presigned.putUrl, fileUrl: presigned.fileUrl }
+              ? {
+                  ...it,
+                  status: "success",
+                  putUrl: presigned.putUrl,
+                  fileUrl: presigned.fileUrl,
+                  key: presigned.key,
+                  contentType,
+                  originalFilename: target.file.name,
+                  error: undefined,
+                }
               : it
           )
         );
 
-        return { uploadId, blockType: target.blockType, fileUrl: presigned.fileUrl };
+        return {
+          uploadId,
+          blockType: target.blockType,
+          fileUrl: presigned.fileUrl,
+          key: presigned.key,
+          contentType,
+          originalFilename: target.file.name,
+        };
       } catch (e: any) {
         setItems((cur) =>
-          cur.map((it) =>
-            it.id === uploadId ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it
-          )
+          cur.map((it) => (it.id === uploadId ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it))
         );
         throw e;
       }
@@ -145,12 +160,5 @@ export default function useS3Upload() {
 
   const getById = useCallback((uploadId: string) => items.find((x) => x.id === uploadId), [items]);
 
-  return {
-    items,
-    isUploading,
-    addAndUpload,
-    retry,
-    remove,
-    getById,
-  };
+  return { items, isUploading, addAndUpload, retry, remove, getById };
 }

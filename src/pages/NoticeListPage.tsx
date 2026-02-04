@@ -25,7 +25,7 @@ export default function NoticeListPage() {
   const [pageData, setPageData] = useState<PageResponse<RecruitPost> | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(12);
+  const [size, setSize] = useState(15);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"latest" | "views">("latest");
@@ -84,11 +84,10 @@ export default function NoticeListPage() {
           <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-xs font-black text-[#813eb6]">
             Recruit
           </span>
-          <span className="text-xs font-black text-gray-400">NOTICE</span>
+          <span className="text-xs font-black text-gray-400"></span>
         </div>
 
         <h1 className="text-2xl md:text-3xl font-black text-gray-900">공지사항</h1>
-        <p className="text-sm font-bold text-gray-500">새로운 소식과 운영 공지를 카드 피드로 확인하세요.</p>
       </div>
 
       <div className="mt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -100,7 +99,7 @@ export default function NoticeListPage() {
             className="w-full pl-4 pr-12 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-700 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm font-black">
-            ⌘K
+            
           </div>
         </div>
 
@@ -134,9 +133,8 @@ export default function NoticeListPage() {
             className="px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-700"
             title="페이지당 개수"
           >
-            <option value={6}>6개</option>
-            <option value={12}>12개</option>
-            <option value={18}>18개</option>
+            <option value={15}>15개</option>
+            <option value={30}>30개</option>
           </select>
         </div>
       </div>
