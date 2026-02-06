@@ -1,0 +1,62 @@
+/* =========================
+   THE FACE SHOP INK LIQUID
+   ========================= */
+@font-face {
+  font-family: "THEFACESHOP-INKLIPQUID";
+  src: url("/fonts/THEFACESHOPA1.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================
+   Freesentation
+   ========================= */
+@font-face {
+  font-family: "Freesentation";
+  src: url("/fonts/Freesentation-7Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================
+   Paperlogy
+   ========================= */
+@font-face {
+  font-family: "Paperlogy";
+  src: url("/fonts/Paperlogy-4Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================
+   Pretendard
+   ========================= */
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================
+   Utility Classes (중요!)
+   ========================= */
+.font-inklipquid {
+  font-family: "THEFACESHOP-INKLIPQUID", cursive;
+}
+
+.font-freesentation {
+  font-family: "Freesentation", "Pretendard", system-ui, sans-serif;
+}
+
+.font-paperlogy {
+  font-family: "Paperlogy", "Pretendard", system-ui, sans-serif;
+}
+
+.font-pretendard {
+  font-family: "Pretendard", system-ui, sans-serif;
+}

@@ -4,7 +4,6 @@ import logoWhite from "../assets/logowhite.png";
 
 import { getRecruitPosts, type RecruitPost, type PageResponse } from "../api/recruitApi";
 
-// ✅ 팝업
 import { getActivePopup, type PopupResponse } from "../api/popupApi";
 import HomePopupModal from "../components/HomePopupModal";
 import { isDismissedToday } from "../lib/popupDismiss";
@@ -59,15 +58,12 @@ const ACTIVITY_PHOTOS = {
 const MainPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // ✅ 최신 공지 2개
   const [notices, setNotices] = useState<NoticeCardVM[]>([]);
   const [noticeLoading, setNoticeLoading] = useState(true);
 
-  // ✅ 팝업 상태
   const [popupOpen, setPopupOpen] = useState(false);
   const [popup, setPopup] = useState<PopupResponse | null>(null);
 
-  // ✅ 메인 팝업 로드
   useEffect(() => {
     let alive = true;
 
@@ -82,7 +78,6 @@ const MainPage: React.FC = () => {
         setPopup(p);
         setPopupOpen(true);
       } catch {
-        // 팝업 실패는 메인 영향 없이 무시
       }
     })();
 
@@ -91,7 +86,6 @@ const MainPage: React.FC = () => {
     };
   }, []);
 
-  // ✅ 공지 로드
   useEffect(() => {
     let alive = true;
 
@@ -130,10 +124,8 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="font-noto bg-white pt-20 overflow-hidden">
-      {/* ✅ HOME POPUP */}
       {popupOpen && popup && <HomePopupModal popup={popup} onClose={() => setPopupOpen(false)} />}
 
-      {/* [SECTION 1] HERO */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-[#f3ebff] via-[#d6bcfa] to-[#813eb6]">
         <div className="absolute top-[-5%] right-[-5%] w-[700px] h-[700px] opacity-10 pointer-events-none select-none">
           <img
@@ -150,10 +142,10 @@ const MainPage: React.FC = () => {
             </h1>
             <p className="text-2xl md:text-3xl font-bold mb-10 drop-shadow-md">여럿이 하나, 애드피아</p>
             <button
-              onClick={() => navigate("/about")}
+              onClick={() => window.open("https://www.instagram.com/adpiaofficial/", "_blank")}
               className="px-10 py-4 bg-white text-[#813eb6] rounded-full font-black shadow-2xl hover:bg-[#3d1d56] hover:text-white transition-all transform hover:-translate-y-1"
             >
-              ADPIA 소개 보기
+              @adpiaofficial
             </button>
           </div>
 
@@ -173,7 +165,6 @@ const MainPage: React.FC = () => {
         </div>
       </section>
 
-      {/* [SECTION 2] NOTICE */}
       <section className="py-24 max-w-7xl mx-auto px-8">
         <div className="flex justify-between items-end mb-16">
           <div>
@@ -234,7 +225,6 @@ const MainPage: React.FC = () => {
         )}
       </section>
 
-      {/* [SECTION 3] ACTIVITY PHOTOS */}
       <section className="py-24 bg-[#F9F7FF]">
         <div className="max-w-7xl mx-auto px-8">
           <div className="mb-16">

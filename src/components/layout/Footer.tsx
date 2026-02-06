@@ -1,21 +1,17 @@
 import React from "react";
-// 사용할 아이콘들을 불러옵니다
 import { FaInstagram, FaYoutube, FaFacebookF } from "react-icons/fa";
-import { SiNaver } from "react-icons/si"; // 블로그용 네이버 아이콘
 
 const Footer: React.FC = () => {
   const socialLinks = [
     { name: "Instagram", icon: <FaInstagram size={18} />, url: "https://www.instagram.com/adpiaofficial" },
-    { name: "Youtube", icon: <FaYoutube size={18} />, url: "#" },
-    { name: "Blog", icon: <SiNaver size={14} />, url: "#" },
-    { name: "Facebook", icon: <FaFacebookF size={18} />, url: "#" },
+    { name: "Youtube", icon: <FaYoutube size={18} />, url: "https://www.youtube.com/@TheADPIA" },
+    { name: "Facebook", icon: <FaFacebookF size={18} />, url: "https://www.facebook.com/share/1BZu5RwH3U/?mibextid=wwXIfr" },
   ];
 
   return (
     <footer className="bg-[#1f0f2d] text-white pt-20 pb-10 border-t border-white/5">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row justify-between items-start mb-16 gap-10">
-          {/* 브랜드 영역 */}
           <div className="space-y-4">
             <h2 className="font-montserrat text-4xl font-black tracking-tighter text-white">ADPIA</h2>
             <p className="text-purple-300/50 text-sm max-w-xs leading-relaxed font-medium">
@@ -24,7 +20,6 @@ const Footer: React.FC = () => {
             </p>
           </div>
 
-          {/* 연락처 및 소셜 영역 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
             <div>
               <h4 className="text-[#813eb6] font-bold text-xs uppercase tracking-widest mb-6">Contact</h4>
@@ -56,7 +51,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* 최하단 정보 */}
         <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-purple-300/30 font-bold tracking-widest uppercase">
           <p>© 2026 ADPIA | 대학생 연합 광고동아리 애드피아</p>
           <div className="flex gap-6">

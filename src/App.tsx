@@ -9,8 +9,8 @@ import SignupPage from "./pages/SignupPage";
 
 import AdminMembersPage from "./pages/AdminMembersPage";
 import AdminPopupEditPage from "./pages/AdminPopupEditPage";
+import AdminExecutivesPage from "./pages/AdminExecutivesPage"; // ✅ 추가
 import AdminRoute from "./components/AdminRoute";
-
 
 import NoticeListPage from "./pages/NoticeListPage";
 import NoticeDetailPage from "./pages/NoticeDetailPage";
@@ -21,19 +21,13 @@ import QaDetailPage from "./pages/QaDetailPage";
 import QaUpsertPage from "./pages/QaUpsertPage";
 
 const CommunityPage = () => (
-  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">
-    Community Page
-  </div>
+  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
 );
 const ArchivePage = () => (
-  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">
-    Archive Page
-  </div>
+  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Archive Page</div>
 );
 const SeminarPage = () => (
-  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">
-    Seminar Page
-  </div>
+  <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Seminar Page</div>
 );
 
 function App() {
@@ -77,7 +71,6 @@ function App() {
             }
           />
 
-          {/* ✅ NEW: 팝업 관리 (작성/수정 단일 페이지) */}
           <Route
             path="/admin/popup"
             element={
@@ -87,10 +80,17 @@ function App() {
             }
           />
 
+          {/* ✅ NEW: 임원진 관리 */}
           <Route
-            path="*"
-            element={<div className="pt-40 text-center">존재하지 않는 페이지입니다.</div>}
+            path="/admin/executives"
+            element={
+              <AdminRoute>
+                <AdminExecutivesPage />
+              </AdminRoute>
+            }
           />
+
+          <Route path="*" element={<div className="pt-40 text-center">존재하지 않는 페이지입니다.</div>} />
         </Routes>
       </main>
 
