@@ -1,4 +1,3 @@
-// src/components/RichTextView.tsx
 import { useEffect, useMemo, useRef } from "react";
 import { renderRichTextToSafeHtml } from "../lib/richText";
 import { applyRichTextStyles } from "../lib/richTextStyle";

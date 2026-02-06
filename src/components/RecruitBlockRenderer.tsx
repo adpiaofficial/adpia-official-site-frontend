@@ -3,6 +3,8 @@ import type { RecruitBlockResponse } from "../api/recruitApi";
 import { parseBlockMeta } from "../lib/blockUtils";
 import { normalizeExternalUrl } from "../lib/url";
 import RichTextView from "./RichTextView";
+// 1. 다운로드 유틸리티를 불러옵니다.
+import { downloadWithPresign } from "../lib/downloadWithPresign";
 
 type LinkPreview = {
   title?: string | null;
@@ -232,6 +234,7 @@ export default function RecruitBlockRenderer({ blocks }: { blocks: RecruitBlockR
           );
         }
 
+        // 2. 핵심 수정 부분: FILE 타입 로직
         if (b.type === "FILE") {
           if (!url) return null;
 
@@ -239,12 +242,17 @@ export default function RecruitBlockRenderer({ blocks }: { blocks: RecruitBlockR
           const fileSize = meta?.fileSize ?? meta?.size;
 
           return (
-            <a
+            <div
               key={idx}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 hover:border-purple-200 transition-all"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 hover:border-purple-200 transition-all cursor-pointer"
+              onClick={() => {
+                // 다운로드 유틸리티 함수를 호출합니다.
+                void downloadWithPresign(url, {
+                  key: meta?.key,
+                  contentType: meta?.contentType,
+                  originalFilename: fileName,
+                });
+              }}
             >
               <div className="min-w-0">
                 <div className="text-sm font-black text-gray-900 truncate">📎 {fileName}</div>
@@ -253,7 +261,7 @@ export default function RecruitBlockRenderer({ blocks }: { blocks: RecruitBlockR
                 </div>
               </div>
               <div className="shrink-0 text-xs font-black text-[#813eb6]">Download →</div>
-            </a>
+            </div>
           );
         }
 

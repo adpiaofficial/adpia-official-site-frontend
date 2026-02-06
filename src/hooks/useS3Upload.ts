@@ -11,13 +11,13 @@ export type UploadItem = {
   file: File;
   boardCode: RecruitBoardCode;
   postId: number;
+
   blockType: UploadBlockType;
   status: UploadStatus;
+
   putUrl?: string;
   fileUrl?: string;
   key?: string;
-  contentType?: string;
-  originalFilename?: string;
   error?: string;
 };
 
@@ -34,7 +34,10 @@ export function guessMediaBlockType(file: File): UploadBlockType {
 export default function useS3Upload() {
   const [items, setItems] = useState<UploadItem[]>([]);
 
-  const isUploading = useMemo(() => items.some((it) => it.status === "uploading"), [items]);
+  const isUploading = useMemo(
+    () => items.some((it) => it.status === "uploading"),
+    [items]
+  );
 
   const addAndUpload = useCallback(
     async (params: { boardCode: RecruitBoardCode; postId: number; file: File }) => {
@@ -54,12 +57,10 @@ export default function useS3Upload() {
       setItems((cur) => [initial, ...cur]);
 
       try {
-        const contentType = file.type || "application/octet-stream";
-
         const presigned = await presignFile({
           boardCode,
           postId,
-          contentType,
+          contentType: file.type || "application/octet-stream",
           originalFilename: file.name,
         });
 
@@ -74,8 +75,6 @@ export default function useS3Upload() {
                   putUrl: presigned.putUrl,
                   fileUrl: presigned.fileUrl,
                   key: presigned.key,
-                  contentType,
-                  originalFilename: file.name,
                   error: undefined,
                 }
               : it
@@ -87,12 +86,14 @@ export default function useS3Upload() {
           blockType,
           fileUrl: presigned.fileUrl,
           key: presigned.key,
-          contentType,
-          originalFilename: file.name,
         };
       } catch (e: any) {
         setItems((cur) =>
-          cur.map((it) => (it.id === id ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it))
+          cur.map((it) =>
+            it.id === id
+              ? { ...it, status: "error", error: e?.message ?? "upload failed" }
+              : it
+          )
         );
         throw e;
       }
@@ -105,15 +106,17 @@ export default function useS3Upload() {
       const target = items.find((x) => x.id === uploadId);
       if (!target) return;
 
-      setItems((cur) => cur.map((it) => (it.id === uploadId ? { ...it, status: "uploading", error: undefined } : it)));
+      setItems((cur) =>
+        cur.map((it) =>
+          it.id === uploadId ? { ...it, status: "uploading", error: undefined } : it
+        )
+      );
 
       try {
-        const contentType = target.file.type || "application/octet-stream";
-
         const presigned = await presignFile({
           boardCode: target.boardCode,
           postId: target.postId,
-          contentType,
+          contentType: target.file.type || "application/octet-stream",
           originalFilename: target.file.name,
         });
 
@@ -128,8 +131,6 @@ export default function useS3Upload() {
                   putUrl: presigned.putUrl,
                   fileUrl: presigned.fileUrl,
                   key: presigned.key,
-                  contentType,
-                  originalFilename: target.file.name,
                   error: undefined,
                 }
               : it
@@ -141,12 +142,12 @@ export default function useS3Upload() {
           blockType: target.blockType,
           fileUrl: presigned.fileUrl,
           key: presigned.key,
-          contentType,
-          originalFilename: target.file.name,
         };
       } catch (e: any) {
         setItems((cur) =>
-          cur.map((it) => (it.id === uploadId ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it))
+          cur.map((it) =>
+            it.id === uploadId ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it
+          )
         );
         throw e;
       }
@@ -160,5 +161,12 @@ export default function useS3Upload() {
 
   const getById = useCallback((uploadId: string) => items.find((x) => x.id === uploadId), [items]);
 
-  return { items, isUploading, addAndUpload, retry, remove, getById };
+  return {
+    items,
+    isUploading,
+    addAndUpload,
+    retry,
+    remove,
+    getById,
+  };
 }

@@ -1,4 +1,14 @@
-import { fileLabel } from "../lib/blockUtils";
+import { downloadWithPresign } from "../lib/downloadWithPresign";
+import { normalizeExternalUrl } from "../lib/url";
+
+function parseMeta(meta?: string | null) {
+  if (!meta) return null;
+  try {
+    return JSON.parse(meta);
+  } catch {
+    return null;
+  }
+}
 
 export default function BlockRenderer({
   blocks,
@@ -10,67 +20,44 @@ export default function BlockRenderer({
   return (
     <div className="space-y-4">
       {sorted.map((b, idx) => {
-        if (b.type === "TEXT") {
-          return (
-            <div key={idx} className="text-sm sm:text-base font-medium text-gray-800 whitespace-pre-wrap leading-relaxed">
-              {b.text}
-            </div>
-          );
-        }
-
-        if (b.type === "IMAGE" && b.url) {
-          return (
-            <a key={idx} href={b.url} target="_blank" rel="noreferrer" className="block">
-              <img
-                src={b.url}
-                alt="image"
-                className="w-full max-h-[520px] object-contain rounded-2xl border border-gray-100 bg-white"
-                loading="lazy"
-              />
-              <div className="mt-2 text-xs font-bold text-gray-400">클릭하면 원본 보기</div>
-            </a>
-          );
-        }
-
-        if (b.type === "VIDEO" && b.url) {
-          return (
-            <div key={idx} className="space-y-2">
-              <video src={b.url} controls className="w-full rounded-2xl border border-gray-100 bg-black" />
-              <div className="text-xs font-bold text-gray-400">영상</div>
-            </div>
-          );
-        }
-
-        if (b.type === "FILE" && b.url) {
-          return (
-            <a
-              key={idx}
-              href={b.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 hover:border-purple-200"
-            >
-              <div className="min-w-0">
-                <div className="text-sm font-black text-gray-800 truncate">{fileLabel(b.url)}</div>
-                <div className="text-[11px] font-bold text-gray-400">다운로드 / 새 탭 열기</div>
-              </div>
-              <div className="text-xs font-black text-[#813eb6]">OPEN</div>
-            </a>
-          );
-        }
-
-        // EMBED/LINK 등은 추후 확장
-        if ((b.type === "LINK" || b.type === "EMBED") && b.url) {
-          return (
-            <a key={idx} href={b.url} target="_blank" rel="noreferrer" className="text-sm font-black text-[#813eb6] underline">
-              {b.url}
-            </a>
-          );
-        }
+        const url = normalizeExternalUrl(b.url ?? "") ?? (b.url ?? "");
+        const meta = parseMeta(b.meta);
+        
+        // [체크용 로그] 모든 블록의 타입을 화면에 작게 표시합니다.
+        console.log(`Block ${idx} type:`, b.type);
 
         return (
-          <div key={idx} className="text-xs font-bold text-gray-400">
-            지원되지 않는 블록: {b.type}
+          <div key={idx} className="relative border-l-4 border-purple-200 pl-4 py-2">
+            <span className="text-[10px] text-gray-400 absolute -top-3 left-0">Type: {b.type}</span>
+
+            {b.type === "TEXT" && (
+              <div className="text-sm text-gray-800 whitespace-pre-wrap">{b.text}</div>
+            )}
+
+            {/* 모든 파일/링크/이미지를 하나의 다운로드 로직으로 통합 테스트 */}
+            {(b.type === "FILE" || b.type === "IMAGE" || b.type === "VIDEO" || b.type === "LINK" || b.type === "EMBED") && url && (
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div className="min-w-0">
+                  <div className="text-sm font-bold truncate">{meta?.originalFilename || "이름 없음"}</div>
+                  <div className="text-[10px] text-gray-400 truncate">{url}</div>
+                </div>
+                
+                <button
+                  type="button"
+                  className="bg-[#813eb6] text-white px-4 py-2 rounded-lg text-xs font-bold"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("!!! 버튼 클릭 감지 !!!");
+                    console.log("전달할 데이터:", { url, meta });
+                    alert(`클릭됨! 파일명: ${meta?.originalFilename}`);
+                    void downloadWithPresign(url, meta);
+                  }}
+                >
+                  다운로드
+                </button>
+              </div>
+            )}
           </div>
         );
       })}

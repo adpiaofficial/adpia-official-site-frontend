@@ -1,3 +1,4 @@
+// src/components/BlockEditor.tsx
 import React, { useRef, useState } from "react";
 import type { RecruitBlockRequest, RecruitBlockType, RecruitBoardCode } from "../api/recruitApi";
 import { normalizeSortOrder } from "../lib/blockUtils";
@@ -28,10 +29,11 @@ function newBlock(type: RecruitBlockType, sortOrder: number): RecruitBlockReques
   return { type, sortOrder, url: "" };
 }
 
-function makeFileMeta(file: File) {
+function makeFileMeta(file: File, key?: string) {
   return JSON.stringify({
+    key,
     originalFilename: file.name,
-    contentType: file.type,
+    contentType: file.type || "application/octet-stream",
     size: file.size,
   });
 }
@@ -118,13 +120,13 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
 
   const insertUploadedBlock = (
     insertAt: number | null,
-    payload: { blockType: UploadBlockType; fileUrl: string; uploadId: string; file: File }
+    payload: { blockType: UploadBlockType; fileUrl: string; uploadId: string; file: File; key?: string }
   ) => {
     const block: RecruitBlockRequest = {
       type: payload.blockType,
       sortOrder: 0,
       url: payload.fileUrl,
-      meta: makeFileMeta(payload.file),
+      meta: makeFileMeta(payload.file, payload.key),
     };
 
     const next =
@@ -154,6 +156,7 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
         fileUrl: result.fileUrl,
         uploadId: result.uploadId,
         file,
+        key: result.key,
       });
 
       if (at != null) at += 1;
@@ -190,12 +193,12 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
         fileUrl: result.fileUrl,
         uploadId: result.uploadId,
         file,
+        key: result.key,
       });
       if (at != null) at += 1;
     }
   };
 
-  // ✅ 선택영역 감싸기
   const wrapSelection = (idx: number, left: string, right: string) => {
     const el = textAreaRefs.current[idx];
     const b = blocks[idx];
@@ -237,9 +240,7 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
     try {
       const currentMeta = b.meta ? JSON.parse(b.meta) : {};
       if (currentMeta?.title || currentMeta?.thumbnailUrl) return;
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     try {
       const p = await getLinkPreview(raw);
@@ -253,9 +254,7 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
 
       const normalizedFromServer = normalizeExternalUrl(p.url ?? "") ?? raw;
       patchBlock(idx, { meta: nextMeta, url: normalizedFromServer });
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   const togglePanel = (idx: number, type: "COLOR" | "HIGHLIGHT" | "FONTSIZE") => {
@@ -382,7 +381,6 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
               <div className="p-4">
                 {type === "TEXT" ? (
                   <div className="space-y-2">
-                    {/* ✅ 한글 툴바 */}
                     <div className="flex flex-wrap items-center gap-2">
                       <button type="button" className={miniBtnCls} disabled={disabled} onClick={() => wrapSelection(idx, "{b}", "{/b}")}>
                         굵게
@@ -403,7 +401,6 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
                       <span className="text-[11px] font-bold text-gray-400">이미지 붙여넣기(Ctrl/⌘+V) 가능</span>
                     </div>
 
-                    {/* ✅ 패널: 폰트크기 */}
                     {openPanelIdx === idx && panelType === "FONTSIZE" && (
                       <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
                         <div className="text-xs font-black text-gray-700 mb-2">폰트 크기</div>
@@ -441,7 +438,6 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
                       </div>
                     )}
 
-                    {/* ✅ 패널: 글자색 */}
                     {openPanelIdx === idx && panelType === "COLOR" && (
                       <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
                         <div className="text-xs font-black text-gray-700 mb-2">글자색 선택</div>
@@ -484,7 +480,6 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
                       </div>
                     )}
 
-                    {/* ✅ 패널: 하이라이트 */}
                     {openPanelIdx === idx && panelType === "HIGHLIGHT" && (
                       <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
                         <div className="text-xs font-black text-gray-700 mb-2">하이라이트 선택</div>
@@ -537,7 +532,6 @@ export default function BlockEditor({ boardCode, postId, value, onChange, disabl
                       className="w-full min-h-[140px] px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
                     />
 
-                    {/* ✅ 미리보기 */}
                     <RichTextPreview value={b.text ?? ""} />
                   </div>
                 ) : type === "IMAGE" ? (
