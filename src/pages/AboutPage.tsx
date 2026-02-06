@@ -17,7 +17,7 @@ export default function AboutPage() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "ROLE_SUPER_ADMIN";
 
-  const [headerTitle] = useState("애드피아 임원진"); // 그룹 없앴으니 고정
+  const [headerTitle] = useState("애드피아 회장단"); // 그룹 없앴으니 고정
   const [members, setMembers] = useState<MemberVM[]>([]);
   const [loaded, setLoaded] = useState(false);
 
