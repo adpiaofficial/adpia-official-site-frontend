@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import useS3Upload from "../hooks/useS3Upload";
 import type { RecruitBoardCode } from "../api/recruitApi";
 
