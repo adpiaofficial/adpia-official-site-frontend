@@ -138,7 +138,7 @@ const MainPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 text-white">
           <div className="animate-fade-in-up">
             <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight font-montserrat italic tracking-tighter">
-              Advertising <br /> has the <span className="text-[#3d1d56]">power</span>
+              ALL for ONE<br />  <span className="text-[#3d1d56]">ONE for ALL</span>
             </h1>
             <p className="text-2xl md:text-3xl font-bold mb-10 drop-shadow-md">여럿이 하나, 애드피아</p>
             <button
