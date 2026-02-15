@@ -249,7 +249,6 @@ export default function HomeDeptTeamShowcase() {
         {/* ===== 학술국 소개 섹션 ===== */}
         <div className="max-w-7xl mx-auto pt-24 pb-16">
           <h2 className={`text-center ${hand} text-6xl md:text-7xl drop-shadow-md`}>학술국 소개</h2>
-          <WaveUnderline />
         </div>
 
         {/* 학술국 - 모바일 레이아웃 */}
@@ -321,7 +320,6 @@ export default function HomeDeptTeamShowcase() {
         {/* ===== 운영팀 소개 섹션 (기존 유지) ===== */}
         <div className="relative z-10 max-w-7xl mx-auto pt-32 pb-32">
           <h2 className={`text-center ${hand} text-6xl md:text-7xl drop-shadow-sm`}>운영팀 소개</h2>
-          <WaveUnderline />
 
           {/* 운영팀 - 데스크탑 */}
           <div className="relative mt-24 hidden md:block">

@@ -1,12 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+// ✅ 메인 로고를 public/mainlogo.png 로 교체 (Vite에서 public은 절대경로로 접근)
+const mainLogo = "/mainlogo.png";
+// (기존 배경용 로고는 유지하고 싶으면 아래도 유지 가능)
 import logoWhite from "../assets/logowhite.png";
 
 import { getRecruitPosts, type RecruitPost, type PageResponse } from "../api/recruitApi";
-
 import { getActivePopup, type PopupResponse } from "../api/popupApi";
 import HomePopupModal from "../components/HomePopupModal";
 import { isDismissedToday } from "../lib/popupDismiss";
+
+// ✅ 푸터 로고 (public/footerlogo.png)
+const footerLogo = "/footerlogo.png";
 
 type NoticeSource = "RECRUIT_NOTICE" | "COMMUNITY_NOTICE";
 
@@ -78,6 +84,7 @@ const MainPage: React.FC = () => {
         setPopup(p);
         setPopupOpen(true);
       } catch {
+        // noop
       }
     })();
 
@@ -126,45 +133,86 @@ const MainPage: React.FC = () => {
     <div className="font-noto bg-white pt-20 overflow-hidden">
       {popupOpen && popup && <HomePopupModal popup={popup} onClose={() => setPopupOpen(false)} />}
 
+      {/* =========================
+          HERO (로고 교체 + 줄바꿈 고정 + 호버 유지)
+         ========================= */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-[#f3ebff] via-[#d6bcfa] to-[#813eb6]">
+        {/* 배경 로고 (원하면 mainLogo로 교체 가능) */}
         <div className="absolute top-[-5%] right-[-5%] w-[700px] h-[700px] opacity-10 pointer-events-none select-none">
-          <img
-            src={logoWhite}
-            alt=""
-            className="w-full h-full object-contain rotate-12 grayscale brightness-200"
-          />
+          <img src={logoWhite} alt="" className="w-full h-full object-contain rotate-12 grayscale brightness-200" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 text-white">
+        {/* ✅ 텍스트 폭 확보: 왼쪽을 더 넓게 */}
+        <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-[1.25fr_0.75fr] gap-12 items-center relative z-10 text-white">
+          {/* LEFT */}
           <div className="animate-fade-in-up">
-            <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight font-montserrat italic tracking-tighter">
-              ALL for ONE<br />  <span className="text-[#3d1d56]">ONE for ALL</span>
+            <h1 className="text-6xl md:text-8xl font-black mb-10 leading-[0.95] font-montserrat italic tracking-tighter">
+              ALL for ONE
+              <br />
+              <span className="text-[#3d1d56]">ONE for ALL</span>
             </h1>
-            <p className="text-2xl md:text-3xl font-bold mb-10 drop-shadow-md">여럿이 하나, 애드피아</p>
-            <button
-              onClick={() => window.open("https://www.instagram.com/adpiaofficial/", "_blank")}
-              className="px-10 py-4 bg-white text-[#813eb6] rounded-full font-black shadow-2xl hover:bg-[#3d1d56] hover:text-white transition-all transform hover:-translate-y-1"
-            >
-              @adpiaofficial
-            </button>
+
+            <p className="font-paperlogy font-normal text-[18px] md:text-[24px] leading-[1.6] text-white/95">
+              애드피아는 광고에 대한 열정으로 함께
+              <br />
+               이상세계를 펼쳐 나가자는 목표 아래,
+              <br />
+              1992년에 설립된 대학생 연합 광고 동아리입니다.
+            </p>
+
+            {/* ✅ 버튼 아래로 + 비율 유지 */}
+            <div className="mt-10">
+              <button
+                onClick={() => window.open("https://www.instagram.com/adpiaofficial/", "_blank")}
+                className={[
+                  "inline-flex items-center justify-center",
+                  "h-12 md:h-14",
+                  "px-8 md:px-10",
+                  "rounded-full",
+                  "bg-white text-[#813eb6]",
+                  "shadow-2xl",
+                  "transition-all transform hover:-translate-y-1",
+                  "hover:bg-[#3d1d56] hover:text-white",
+                  "font-freesentation font-bold",
+                  "text-[16px] md:text-[20px]",
+                  "tracking-tight",
+                ].join(" ")}
+              >
+                @adpiaofficial
+              </button>
+            </div>
           </div>
 
-          <div className="flex justify-center lg:justify-end animate-fade-in">
+          {/* RIGHT */}
+          {/* ✅ 오른쪽 박스 더 오른쪽으로 살짝 빼서 줄바꿈 여유 확보 */}
+          <div className="flex justify-center lg:justify-end animate-fade-in lg:translate-x-12 xl:translate-x-20">
             <div className="w-[420px] h-[420px] md:w-[650px] md:h-[650px] bg-white/10 backdrop-blur-2xl rounded-[4rem] border border-white/20 flex flex-col items-center justify-center shadow-[0_30px_60px_rgba(0,0,0,0.15)] group relative overflow-hidden">
+              {/* ✅ 호버 그라데이션(기존 효과 유지) */}
               <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+              {/* ✅ 메인 로고를 public/mainlogo.png로 교체
+                  ✅ 호버 시 거의 꽉 차게: scale + max 크기 상향 */}
               <img
-                src={logoWhite}
+                src={mainLogo}
                 alt="ADPIA Main Logo"
-                className="w-64 md:w-[420px] object-contain drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-500 relative z-10"
+                className={[
+                  "object-contain drop-shadow-2xl relative z-10",
+                  "w-[320px] md:w-[560px]",
+                  "transform transition-transform duration-500",
+                  "group-hover:scale-[1.14]",
+                ].join(" ")}
               />
-              <div className="mt-8 text-4xl md:text-6xl font-black tracking-[0.4em] font-montserrat italic uppercase text-white opacity-80 relative z-10">
-                ADPIA
-              </div>
+
+              {/* ✅ 기존 텍스트 대신 푸터 로고 사용 */}
+            
             </div>
           </div>
         </div>
       </section>
 
+      {/* =========================
+          NOTICE
+         ========================= */}
       <section className="py-24 max-w-7xl mx-auto px-8">
         <div className="flex justify-between items-end mb-16">
           <div>
@@ -225,6 +273,9 @@ const MainPage: React.FC = () => {
         )}
       </section>
 
+      {/* =========================
+          Live Feed
+         ========================= */}
       <section className="py-24 bg-[#F9F7FF]">
         <div className="max-w-7xl mx-auto px-8">
           <div className="mb-16">
@@ -255,7 +306,9 @@ const MainPage: React.FC = () => {
                 onClick={() => navigate("/community")}
                 className="flex-1 bg-[#813eb6] rounded-[3rem] flex flex-col items-center justify-center text-white p-10 shadow-xl group cursor-pointer hover:bg-[#3d1d56] transition-all duration-500"
               >
-                <span className="text-white/40 font-black text-[10px] tracking-[0.6em] mb-4 uppercase">Experience</span>
+                <span className="text-white/40 font-black text-[10px] tracking-[0.6em] mb-4 uppercase">
+                  Experience
+                </span>
                 <div className="font-black text-3xl uppercase tracking-tighter italic font-montserrat group-hover:scale-110 transition-transform">
                   {ACTIVITY_PHOTOS.sub1.title}
                 </div>

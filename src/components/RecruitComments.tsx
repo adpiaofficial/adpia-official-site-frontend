@@ -24,6 +24,24 @@ function formatDT(iso: string) {
 
 type Props = { postId: number };
 
+// ✅ A 방식: deleted 댓글은 숨기고, 자식 댓글은 "승격"해서 보여줌
+function pruneDeleted(arr: RecruitComment[]): RecruitComment[] {
+  const out: RecruitComment[] = [];
+
+  for (const c of arr) {
+    const nextChildren = c.children ? pruneDeleted(c.children) : [];
+
+    if (c.deleted) {
+      // 부모가 삭제되면 부모는 숨기고 자식만 위로 올린다
+      out.push(...nextChildren);
+    } else {
+      out.push({ ...c, children: nextChildren });
+    }
+  }
+
+  return out;
+}
+
 export default function RecruitComments({ postId }: Props) {
   const { user } = useAuth();
 
@@ -76,14 +94,15 @@ export default function RecruitComments({ postId }: Props) {
     return c.authorType === "MEMBER" && c.authorMemberId === user.id;
   };
 
+  // ✅ 렌더/카운트용: 삭제된 댓글은 숨기고, 자식은 승격
+  const visibleItems = useMemo(() => pruneDeleted(items), [items]);
+
   const CommentNode = ({ c, depth }: { c: RecruitComment; depth: number }) => {
     const [replyOpen, setReplyOpen] = useState(false);
     const [reply, setReply] = useState("");
 
     const [rGuestName, setRGuestName] = useState(guestName);
     const [rGuestPw, setRGuestPw] = useState(guestPw);
-
-    const isDeleted = c.deleted;
 
     const onReply = async () => {
       if (!reply.trim()) return alert("내용을 입력해주세요.");
@@ -128,29 +147,28 @@ export default function RecruitComments({ postId }: Props) {
               <div className="text-xs font-bold text-gray-400">{formatDT(c.createdAt)}</div>
             </div>
 
+            {/* ✅ 삭제된 댓글은 visibleItems 단계에서 제거되므로 메시지 표시/분기 필요 없음 */}
             <div className="mt-2 text-sm font-bold text-gray-700 whitespace-pre-wrap">
-              {isDeleted ? <span className="text-gray-400">삭제된 댓글입니다.</span> : c.content}
+              {c.content}
             </div>
 
-            {!isDeleted && (
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  onClick={() => setReplyOpen((v) => !v)}
-                  className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-[12px] font-black text-gray-700 hover:text-[#813eb6]"
-                >
-                  {replyOpen ? "취소" : "답글"}
-                </button>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={() => setReplyOpen((v) => !v)}
+                className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-[12px] font-black text-gray-700 hover:text-[#813eb6]"
+              >
+                {replyOpen ? "취소" : "답글"}
+              </button>
 
-                {canDelete(c) && (
-                  <button
-                    onClick={onDelete}
-                    className="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 text-[12px] font-black text-red-600 hover:bg-red-100"
-                  >
-                    삭제
-                  </button>
-                )}
-              </div>
-            )}
+              {canDelete(c) && (
+                <button
+                  onClick={onDelete}
+                  className="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 text-[12px] font-black text-red-600 hover:bg-red-100"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -202,11 +220,12 @@ export default function RecruitComments({ postId }: Props) {
     );
   };
 
+  // ✅ count도 visibleItems 기준으로
   const count = useMemo(() => {
     const dfs = (arr: RecruitComment[]): number =>
       arr.reduce((acc, c) => acc + 1 + (c.children ? dfs(c.children) : 0), 0);
-    return dfs(items);
-  }, [items]);
+    return dfs(visibleItems);
+  }, [visibleItems]);
 
   return (
     <div className="mt-6 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
@@ -255,10 +274,10 @@ export default function RecruitComments({ postId }: Props) {
         <div className="mt-5 divide-y divide-gray-50">
           {loading ? (
             <div className="py-6 text-sm font-bold text-gray-400">불러오는 중...</div>
-          ) : items.length === 0 ? (
+          ) : visibleItems.length === 0 ? (
             <div className="py-6 text-sm font-bold text-gray-400">댓글이 없습니다.</div>
           ) : (
-            items.map((c) => <CommentNode key={c.id} c={c} depth={0} />)
+            visibleItems.map((c) => <CommentNode key={c.id} c={c} depth={0} />)
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+// src/pages/QaListPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -60,6 +61,13 @@ export default function QaListPage() {
       // ✅ ALL 탭에서는 pinned를 무조건 상단으로
       if (tab === "ALL" && a.pinned !== b.pinned) return a.pinned ? -1 : 1;
 
+      // ✅ FAQ 탭: "자주하는질문으로 채택된 경우에만 작성순"
+      // (= pinned만 남아있으니) 생성일 오름차순(작성된 순서대로)로 고정
+      if (tab === "FAQ") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+
+      // ✅ ALL 탭: 기존 정렬 옵션 유지
       if (sort === "views") return b.viewCount - a.viewCount;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
@@ -77,8 +85,12 @@ export default function QaListPage() {
     }
   };
 
-  // ✅ 글번호(최신글=1) 계산: 현재 페이지 기준 연속 번호
-  const calcDisplayNo = (indexInPage: number) => page * size + indexInPage + 1;
+  // ✅ 글번호: 전체 글 수 기준(최신글이 가장 큰 번호로 표시)
+  // 예: totalElements=100이면, 첫 줄은 100, 그 아래는 99...
+  const calcDisplayNo = (indexInList: number) => {
+    const total = pageData?.totalElements ?? 0;
+    return total - (page * size + indexInList);
+  };
 
   return (
     <div className="pt-24 md:pt-28 max-w-5xl mx-auto px-4 sm:px-6 pb-24">
@@ -134,30 +146,33 @@ export default function QaListPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSort("latest")}
-              className={[
-                "px-4 py-3 rounded-2xl border text-sm font-black transition-all",
-                sort === "latest"
-                  ? "border-purple-200 text-[#813eb6] bg-purple-50"
-                  : "border-gray-200 text-gray-600 bg-white hover:text-[#813eb6] hover:border-purple-200",
-              ].join(" ")}
-            >
-              최신순
-            </button>
-            <button
-              onClick={() => setSort("views")}
-              className={[
-                "px-4 py-3 rounded-2xl border text-sm font-black transition-all",
-                sort === "views"
-                  ? "border-purple-200 text-[#813eb6] bg-purple-50"
-                  : "border-gray-200 text-gray-600 bg-white hover:text-[#813eb6] hover:border-purple-200",
-              ].join(" ")}
-            >
-              조회순
-            </button>
-          </div>
+          {/* ✅ FAQ 탭일 땐 정렬 버튼 숨김(작성순 고정) */}
+          {tab !== "FAQ" && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSort("latest")}
+                className={[
+                  "px-4 py-3 rounded-2xl border text-sm font-black transition-all",
+                  sort === "latest"
+                    ? "border-purple-200 text-[#813eb6] bg-purple-50"
+                    : "border-gray-200 text-gray-600 bg-white hover:text-[#813eb6] hover:border-purple-200",
+                ].join(" ")}
+              >
+                최신순
+              </button>
+              <button
+                onClick={() => setSort("views")}
+                className={[
+                  "px-4 py-3 rounded-2xl border text-sm font-black transition-all",
+                  sort === "views"
+                    ? "border-purple-200 text-[#813eb6] bg-purple-50"
+                    : "border-gray-200 text-gray-600 bg-white hover:text-[#813eb6] hover:border-purple-200",
+                ].join(" ")}
+              >
+                조회순
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -175,17 +190,13 @@ export default function QaListPage() {
       <div className="mt-6 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
           <div className="text-sm font-black text-gray-900">{tab === "FAQ" ? "자주하는질문" : "목록"}</div>
-          <div className="text-xs font-bold text-gray-400">
-            {pageData ? `page ${page + 1} / ${totalPages}` : ""}
-          </div>
+          <div className="text-xs font-bold text-gray-400">{pageData ? `page ${page + 1} / ${totalPages}` : ""}</div>
         </div>
 
         {pageLoading ? (
           <div className="p-6 text-sm font-bold text-gray-400">불러오는 중...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-6 text-sm font-bold text-gray-400">
-            {tab === "FAQ" ? "자주하는질문이 없습니다." : "질문이 없습니다."}
-          </div>
+          <div className="p-6 text-sm font-bold text-gray-400">{tab === "FAQ" ? "자주하는질문이 없습니다." : "질문이 없습니다."}</div>
         ) : (
           <div className="divide-y divide-gray-50">
             <div className="grid grid-cols-12 px-5 py-3 text-xs font-black text-gray-400 bg-gray-50">
@@ -199,10 +210,8 @@ export default function QaListPage() {
                 className="grid grid-cols-12 px-5 py-4 hover:bg-purple-50/40 cursor-pointer"
                 onClick={() => navigate(`/recruit/qa/${p.id}`)}
               >
-                {/* ✅ 글번호: id 대신 연속 번호 */}
-                <div className="col-span-3 md:col-span-2 text-sm font-black text-gray-700">
-                  {calcDisplayNo(index)}
-                </div>
+                {/* ✅ 글번호: 누적 큰 번호(최신글이 가장 큰 번호) */}
+                <div className="col-span-3 md:col-span-2 text-sm font-black text-gray-700">{calcDisplayNo(index)}</div>
 
                 <div className="col-span-9 md:col-span-10 flex items-center gap-2 min-w-0">
                   {p.pinned && (
@@ -210,9 +219,7 @@ export default function QaListPage() {
                       자주하는질문
                     </span>
                   )}
-                  {p.secret && (
-                    <span className="text-[11px] font-black px-2 py-1 rounded-lg bg-gray-900 text-white">🔒</span>
-                  )}
+                  {p.secret && <span className="text-[11px] font-black px-2 py-1 rounded-lg bg-gray-900 text-white">🔒</span>}
 
                   <div className="truncate text-sm font-bold text-gray-900">{p.title}</div>
 
