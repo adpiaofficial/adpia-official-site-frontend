@@ -11,9 +11,6 @@ import { getActivePopup, type PopupResponse } from "../api/popupApi";
 import HomePopupModal from "../components/HomePopupModal";
 import { isDismissedToday } from "../lib/popupDismiss";
 
-// ✅ 푸터 로고 (public/footerlogo.png)
-const footerLogo = "/footerlogo.png";
-
 type NoticeSource = "RECRUIT_NOTICE" | "COMMUNITY_NOTICE";
 
 type NoticeCardVM = {
