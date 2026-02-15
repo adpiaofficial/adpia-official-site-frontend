@@ -27,16 +27,18 @@
 /* 4 Regular */
 @font-face {
   font-family: "Paperlogy";
-  src: url("/fonts/Paperlogy-4Regular.woff2") format("woff2");
+  src: url("/fonts/Paperlogy-4Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
-/* 6 SemiBold */
+/* =========================
+   Paperlogy SemiBold (600)
+   ========================= */
 @font-face {
   font-family: "Paperlogy";
-  src: url("/fonts/Paperlogy-6SemiBold.woff2") format("woff2");
+  src: url("/fonts/Paperlogy-6SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;

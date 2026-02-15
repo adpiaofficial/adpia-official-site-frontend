@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ✅ 메인 로고를 public/mainlogo.png 로 교체 (Vite에서 public은 절대경로로 접근)
-const mainLogo = "/mainlogo.png";
-// (기존 배경용 로고는 유지하고 싶으면 아래도 유지 가능)
 import logoWhite from "../assets/logowhite.png";
 
 import { getRecruitPosts, type RecruitPost, type PageResponse } from "../api/recruitApi";
@@ -127,82 +124,48 @@ const MainPage: React.FC = () => {
   const noticeCards = useMemo(() => notices.slice(0, 2), [notices]);
 
   return (
-    <div className="font-noto bg-white pt-20 overflow-hidden">
+    <div className="bg-white pt-20 overflow-hidden">
       {popupOpen && popup && <HomePopupModal popup={popup} onClose={() => setPopupOpen(false)} />}
 
       {/* =========================
-          HERO (로고 교체 + 줄바꿈 고정 + 호버 유지)
+          HERO (로고박스 제거 / italic 제거 / 줄간격 조정 / 로고 오른쪽)
          ========================= */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-[#f3ebff] via-[#d6bcfa] to-[#813eb6]">
-        {/* 배경 로고 (원하면 mainLogo로 교체 가능) */}
-        <div className="absolute top-[-5%] right-[-5%] w-[700px] h-[700px] opacity-10 pointer-events-none select-none">
-          <img src={logoWhite} alt="" className="w-full h-full object-contain rotate-12 grayscale brightness-200" />
-        </div>
-
-        {/* ✅ 텍스트 폭 확보: 왼쪽을 더 넓게 */}
-        <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-[1.25fr_0.75fr] gap-12 items-center relative z-10 text-white">
+        <div className="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-2 gap-4 items-center relative z-10 text-white">
           {/* LEFT */}
           <div className="animate-fade-in-up">
-            <h1 className="text-6xl md:text-8xl font-black mb-10 leading-[0.95] font-montserrat italic tracking-tighter">
+            {/* ✅ 폰트 그대로(font-montserrat) + italic만 제거 */}
+            <h1 className="text-6xl md:text-8xl font-black mb-7 leading-[1.02] font-montserrat tracking-tighter">
               ALL for ONE
               <br />
+              {/* ✅ ONE for ALL 색상: 기존 느낌(#3d1d56) */}
               <span className="text-[#3d1d56]">ONE for ALL</span>
             </h1>
 
-            <p className="font-paperlogy font-normal text-[18px] md:text-[24px] leading-[1.6] text-white/95">
-              애드피아는 광고에 대한 열정으로 함께
-              <br />
-               이상세계를 펼쳐 나가자는 목표 아래,
+            {/* ✅ 첫 줄을 "목표 아래,"까지 고정 */}
+            <p className="font-paperlogy font-normal text-[18px] md:text-[19px] leading-[1.95] text-white/95">
+              애드피아는 광고에 대한 열정으로 함께 이상세계를 펼쳐 나가자는 목표 아래,
               <br />
               1992년에 설립된 대학생 연합 광고 동아리입니다.
             </p>
 
-            {/* ✅ 버튼 아래로 + 비율 유지 */}
-            <div className="mt-10">
+            <div className="mt-12">
               <button
                 onClick={() => window.open("https://www.instagram.com/adpiaofficial/", "_blank")}
-                className={[
-                  "inline-flex items-center justify-center",
-                  "h-12 md:h-14",
-                  "px-8 md:px-10",
-                  "rounded-full",
-                  "bg-white text-[#813eb6]",
-                  "shadow-2xl",
-                  "transition-all transform hover:-translate-y-1",
-                  "hover:bg-[#3d1d56] hover:text-white",
-                  "font-freesentation font-bold",
-                  "text-[16px] md:text-[20px]",
-                  "tracking-tight",
-                ].join(" ")}
+                className="inline-flex items-center justify-center h-12 md:h-14 px-9 md:px-11 rounded-full bg-white text-[#813eb6] shadow-2xl transition-all transform hover:-translate-y-1 hover:bg-[#3d1d56] hover:text-white font-black text-[16px] md:text-[20px]"
               >
                 @adpiaofficial
               </button>
             </div>
           </div>
 
-          {/* RIGHT */}
-          {/* ✅ 오른쪽 박스 더 오른쪽으로 살짝 빼서 줄바꿈 여유 확보 */}
-          <div className="flex justify-center lg:justify-end animate-fade-in lg:translate-x-12 xl:translate-x-20">
-            <div className="w-[420px] h-[420px] md:w-[650px] md:h-[650px] bg-white/10 backdrop-blur-2xl rounded-[4rem] border border-white/20 flex flex-col items-center justify-center shadow-[0_30px_60px_rgba(0,0,0,0.15)] group relative overflow-hidden">
-              {/* ✅ 호버 그라데이션(기존 효과 유지) */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-              {/* ✅ 메인 로고를 public/mainlogo.png로 교체
-                  ✅ 호버 시 거의 꽉 차게: scale + max 크기 상향 */}
-              <img
-                src={mainLogo}
-                alt="ADPIA Main Logo"
-                className={[
-                  "object-contain drop-shadow-2xl relative z-10",
-                  "w-[320px] md:w-[560px]",
-                  "transform transition-transform duration-500",
-                  "group-hover:scale-[1.14]",
-                ].join(" ")}
-              />
-
-              {/* ✅ 기존 텍스트 대신 푸터 로고 사용 */}
-            
-            </div>
+          {/* RIGHT (✅ 로고박스 제거 + 로고를 더 오른쪽으로) */}
+          <div className="flex justify-center lg:justify-end animate-fade-in lg:translate-x-5 xl:translate-x-10">
+            <img
+              src={logoWhite}
+              alt="ADPIA Logo"
+              className="object-contain drop-shadow-2xl w-[700px] md:w-[800px] transition-transform duration-500 hover:scale-[1.16]"
+            />
           </div>
         </div>
       </section>
@@ -213,7 +176,7 @@ const MainPage: React.FC = () => {
       <section className="py-24 max-w-7xl mx-auto px-8">
         <div className="flex justify-between items-end mb-16">
           <div>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tighter italic font-montserrat border-l-8 border-[#813eb6] pl-6">
+            <h2 className="text-4xl font-black text-gray-900 tracking-tighter font-montserrat border-l-8 border-[#813eb6] pl-6">
               NOTICE
             </h2>
           </div>
@@ -249,7 +212,7 @@ const MainPage: React.FC = () => {
               >
                 <div className={`${sourceColor(news.source)} p-5 flex justify-between items-center text-white`}>
                   <span className="font-bold text-[10px] tracking-widest uppercase">{sourceLabel(news.source)}</span>
-                  <span className="text-2xl font-black opacity-20 italic">#{String(idx + 1).padStart(2, "0")}</span>
+                  <span className="text-2xl font-black opacity-20">#{String(idx + 1).padStart(2, "0")}</span>
                 </div>
 
                 <div className="p-8 flex flex-col flex-grow justify-between bg-white">
@@ -257,7 +220,7 @@ const MainPage: React.FC = () => {
                     {news.title}
                   </h3>
 
-                  <div className="flex justify-between items-center text-[11px] text-gray-400 border-t border-gray-50 pt-6 italic font-medium">
+                  <div className="flex justify-between items-center text-[11px] text-gray-400 border-t border-gray-50 pt-6 font-medium">
                     <span>📅 {news.date}</span>
                     <span className="font-black text-[#813eb6] opacity-0 group-hover:opacity-100 transition-all uppercase tracking-tighter">
                       Read +
@@ -280,7 +243,7 @@ const MainPage: React.FC = () => {
               Live Feed
             </span>
             <h2 className="text-4xl font-black text-gray-900 leading-tight tracking-tight">
-              애드피아의 <span className="text-[#813eb6] italic">활동 사진</span>
+              애드피아의 <span className="text-[#813eb6]">활동 사진</span>
             </h2>
           </div>
 
@@ -289,11 +252,11 @@ const MainPage: React.FC = () => {
               onClick={() => navigate("/community")}
               className="md:col-span-8 relative group overflow-hidden rounded-[3.5rem] shadow-2xl bg-gray-200 cursor-pointer"
             >
-              <div className="w-full h-full flex items-center justify-center text-gray-400 font-black text-2xl italic tracking-widest uppercase font-montserrat">
+              <div className="w-full h-full flex items-center justify-center text-gray-400 font-black text-2xl tracking-widest uppercase font-montserrat">
                 Latest Activity Image
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#3d1d56]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 p-12 flex flex-col justify-end text-white">
-                <h4 className="text-4xl font-black mb-4 italic uppercase font-montserrat">{ACTIVITY_PHOTOS.main.title}</h4>
+                <h4 className="text-4xl font-black mb-4 uppercase font-montserrat">{ACTIVITY_PHOTOS.main.title}</h4>
                 <p className="text-white/80 text-lg font-light leading-relaxed max-w-lg">{ACTIVITY_PHOTOS.main.desc}</p>
               </div>
             </div>
@@ -303,10 +266,8 @@ const MainPage: React.FC = () => {
                 onClick={() => navigate("/community")}
                 className="flex-1 bg-[#813eb6] rounded-[3rem] flex flex-col items-center justify-center text-white p-10 shadow-xl group cursor-pointer hover:bg-[#3d1d56] transition-all duration-500"
               >
-                <span className="text-white/40 font-black text-[10px] tracking-[0.6em] mb-4 uppercase">
-                  Experience
-                </span>
-                <div className="font-black text-3xl uppercase tracking-tighter italic font-montserrat group-hover:scale-110 transition-transform">
+                <span className="text-white/40 font-black text-[10px] tracking-[0.6em] mb-4 uppercase">Experience</span>
+                <div className="font-black text-3xl uppercase tracking-tighter font-montserrat group-hover:scale-110 transition-transform">
                   {ACTIVITY_PHOTOS.sub1.title}
                 </div>
               </div>
@@ -315,15 +276,9 @@ const MainPage: React.FC = () => {
                 onClick={() => navigate("/archive")}
                 className="flex-1 bg-white rounded-[3rem] flex flex-col items-center justify-center p-8 text-center shadow-lg border border-purple-50 group hover:border-[#813eb6] transition-all cursor-pointer"
               >
-                <span className="text-[#813eb6] font-black text-5xl mb-4 italic font-montserrat group-hover:animate-bounce">
-                  A+
-                </span>
-                <p className="text-gray-900 font-black text-xl uppercase tracking-tighter italic mb-1">
-                  {ACTIVITY_PHOTOS.sub2.title}
-                </p>
-                <p className="text-gray-400 text-xs font-medium italic opacity-60 uppercase tracking-widest">
-                  Archive records
-                </p>
+                <span className="text-[#813eb6] font-black text-5xl mb-4 font-montserrat group-hover:animate-bounce">A+</span>
+                <p className="text-gray-900 font-black text-xl uppercase tracking-tighter mb-1">{ACTIVITY_PHOTOS.sub2.title}</p>
+                <p className="text-gray-400 text-xs font-medium opacity-60 uppercase tracking-widest">Archive records</p>
               </div>
             </div>
           </div>

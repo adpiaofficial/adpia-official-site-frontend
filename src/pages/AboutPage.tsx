@@ -60,7 +60,9 @@ export default function AboutPage() {
             {/* ===== 제목 ===== */}
             <h1 className="font-paperlogy font-semibold text-[40px] md:text-[65px] leading-[1.2] mb-12 drop-shadow-md">
               여럿이 하나,{" "}
-              <span className="text-[#3d1d56]">애드피아</span>
+              <span className="text-white font-black tracking-tight">
+  애드피아
+</span>
             </h1>
 
             {/* ===== 본문 ===== */}
