@@ -81,14 +81,6 @@ function StarGlow({ className }: { className?: string }) {
   );
 }
 
-function WaveUnderline() {
-  return (
-    <span className="block mt-2 text-center text-white/80 leading-none select-none">
-      <span className={`inline-block ${hand} tracking-[0.35em]`}>~~~~~~~</span>
-    </span>
-  );
-}
-
 function PillButton({ href }: { href: string }) {
   const disabled = href === "#";
   return (
