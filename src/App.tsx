@@ -23,6 +23,9 @@ import QaUpsertPage from "./pages/QaUpsertPage";
 import HistoryPage from "./pages/HistoryPage";
 import AdminHistoryPage from "./pages/AdminHistoryPage";
 
+import RulesPage from "./pages/RulesPage";
+
+
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
 );
@@ -104,7 +107,7 @@ function App() {
             }
           />
 
-
+          <Route path="/about/rules" element={<RulesPage />} />
           <Route path="*" element={<div className="pt-40 text-center">존재하지 않는 페이지입니다.</div>} />
         </Routes>
       </main>
