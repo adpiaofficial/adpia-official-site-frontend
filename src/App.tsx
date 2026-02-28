@@ -9,7 +9,7 @@ import SignupPage from "./pages/SignupPage";
 
 import AdminMembersPage from "./pages/AdminMembersPage";
 import AdminPopupEditPage from "./pages/AdminPopupEditPage";
-import AdminExecutivesPage from "./pages/AdminExecutivesPage"; // ✅ 추가
+import AdminExecutivesPage from "./pages/AdminExecutivesPage";
 import AdminRoute from "./components/AdminRoute";
 
 import NoticeListPage from "./pages/NoticeListPage";
@@ -19,6 +19,9 @@ import NoticeUpsertPage from "./pages/NoticeUpsertPage";
 import QaListPage from "./pages/QaListPage";
 import QaDetailPage from "./pages/QaDetailPage";
 import QaUpsertPage from "./pages/QaUpsertPage";
+
+import HistoryPage from "./pages/HistoryPage";
+import AdminHistoryPage from "./pages/AdminHistoryPage";
 
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
@@ -39,6 +42,8 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/about/history" element={<HistoryPage />} />
+
 
           <Route path="/community" element={<CommunityPage />} />
           <Route path="/archive" element={<ArchivePage />} />
@@ -80,7 +85,16 @@ function App() {
             }
           />
 
-          {/* ✅ NEW: 임원진 관리 */}
+          <Route
+            path="/admin/history"
+            element={
+              <AdminRoute>
+                <AdminHistoryPage />
+              </AdminRoute>
+  }
+/>
+
+          {/* ✅ 임원진 관리 */}
           <Route
             path="/admin/executives"
             element={
@@ -89,6 +103,7 @@ function App() {
               </AdminRoute>
             }
           />
+
 
           <Route path="*" element={<div className="pt-40 text-center">존재하지 않는 페이지입니다.</div>} />
         </Routes>

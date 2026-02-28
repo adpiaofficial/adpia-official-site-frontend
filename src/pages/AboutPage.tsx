@@ -1,4 +1,3 @@
-// src/pages/AboutPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import mainLogo from "../assets/logo.png";
@@ -107,7 +106,7 @@ export default function AboutPage() {
 
             <p className="font-paperlogy font-normal text-white/80 text-base md:text-lg max-w-3xl leading-relaxed">
               단순한 친목을 넘어 실질적인 광고 역량을 키우고,
-              우리의 아이디어로 세상을 조금 더 흥미롭게 만드는 것.
+              우리의 아이디어로 세상을 조금 더 흥미롭게 만드는 것.<br />
               그것이 애드피아가 30년 넘게 지켜온 가치입니다.
             </p>
           </div>
