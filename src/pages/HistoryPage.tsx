@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import HistoryTimeline from "../components/HistoryTimeline";
 import HistoryUpsertModal from "../components/HistoryUpsertModal";
 import {
@@ -17,7 +16,6 @@ function isAdmin(role?: string | null) {
 }
 
 export default function HistoryPage() {
-  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const canEdit = isAdmin(user?.role);
 
