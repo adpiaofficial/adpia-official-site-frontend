@@ -24,6 +24,9 @@ import HistoryPage from "./pages/HistoryPage";
 import AdminHistoryPage from "./pages/AdminHistoryPage";
 
 import RulesPage from "./pages/RulesPage";
+import NewsListPage from "./pages/NewsListPage";
+import NewsDetailPage from "./pages/NewsDetailPage";
+import NewsUpsertPage from "./pages/NewsUpsertPage";
 
 
 const CommunityPage = () => (
@@ -108,6 +111,10 @@ function App() {
           />
 
           <Route path="/about/rules" element={<RulesPage />} />
+          <Route path="/about/news" element={<NewsListPage />} />
+          <Route path="/about/news/new" element={<NewsUpsertPage mode="create" />} />
+          <Route path="/about/news/:id" element={<NewsDetailPage />} />
+          <Route path="/about/news/:id/edit" element={<NewsUpsertPage mode="edit" />} />
           <Route path="*" element={<div className="pt-40 text-center">존재하지 않는 페이지입니다.</div>} />
         </Routes>
       </main>

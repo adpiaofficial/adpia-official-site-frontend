@@ -1,4 +1,3 @@
-// src/pages/QaListPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,7 +8,7 @@ function isAdminRole(role?: string | null) {
   return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
 }
 
-type Tab = "ALL" | "FAQ"; // ✅ FAQ 탭 = 자주하는질문
+type Tab = "ALL" | "FAQ"; 
 
 export default function QaListPage() {
   const navigate = useNavigate();
@@ -19,14 +18,13 @@ export default function QaListPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
 
-  // ✅ 12번: 15 / 30
   const [size, setSize] = useState(15);
 
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"latest" | "views">("latest");
-  const [tab, setTab] = useState<Tab>("ALL"); // ✅ ALL / 자주하는질문
+  const [tab, setTab] = useState<Tab>("ALL"); 
 
-  const showWriteFab = true; // ✅ QA는 누구나 작성 진입
+  const showWriteFab = true; 
   const canPin = isAdminRole(user?.role);
 
   const fetchPage = async (nextPage: number) => {
@@ -50,24 +48,17 @@ export default function QaListPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    // 1) 탭 필터
     const tabBase = tab === "FAQ" ? posts.filter((p) => p.pinned) : posts;
 
-    // 2) 검색 필터
     const searched = q ? tabBase.filter((p) => p.title.toLowerCase().includes(q)) : tabBase;
 
-    // 3) 정렬
     return [...searched].sort((a, b) => {
-      // ✅ ALL 탭에서는 pinned를 무조건 상단으로
       if (tab === "ALL" && a.pinned !== b.pinned) return a.pinned ? -1 : 1;
 
-      // ✅ FAQ 탭: "자주하는질문으로 채택된 경우에만 작성순"
-      // (= pinned만 남아있으니) 생성일 오름차순(작성된 순서대로)로 고정
       if (tab === "FAQ") {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
 
-      // ✅ ALL 탭: 기존 정렬 옵션 유지
       if (sort === "views") return b.viewCount - a.viewCount;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
@@ -85,8 +76,6 @@ export default function QaListPage() {
     }
   };
 
-  // ✅ 글번호: 전체 글 수 기준(최신글이 가장 큰 번호로 표시)
-  // 예: totalElements=100이면, 첫 줄은 100, 그 아래는 99...
   const calcDisplayNo = (indexInList: number) => {
     const total = pageData?.totalElements ?? 0;
     return total - (page * size + indexInList);
@@ -241,7 +230,6 @@ export default function QaListPage() {
         )}
       </div>
 
-      {/* pagination */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         <button
           disabled={pageLoading || page <= 0}

@@ -12,7 +12,7 @@ export type PageResponse<T> = {
   empty: boolean;
 };
 
-export type RecruitBoardCode = "NOTICE" | "QA";
+export type RecruitBoardCode = "NOTICE" | "QA" | "NEWS";
 
 export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
 

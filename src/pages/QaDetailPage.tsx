@@ -20,23 +20,11 @@ function isAdminRole(role?: string | null) {
   return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
 }
 
-/**
- * ✅ 비밀번호 입력 제한: 영문/숫자/특수문자만 허용
- * - 한글/이모지/공백 등 제거
- * - 특수문자 허용 범위는 필요하면 조정 가능
- */
 function sanitizePw(v: string) {
   return v.replace(/[^A-Za-z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]/g, "");
 }
 
-/**
- * ✅ 수정/삭제 버튼 노출 정책
- * - 관리자: 항상 가능
- * - 회원 작성글: 본인만
- * - 게스트 작성글:
- *    - 비밀글 + locked 상태면 버튼 숨김 (비번 unlock 후에만 보이게)
- *    - locked 풀리면 수정/삭제 가능
- */
+
 function canEditQA(user: any, post: RecruitPost) {
   if (!post) return false;
 
@@ -65,11 +53,9 @@ export default function QaDetailPage() {
   const [post, setPost] = useState<RecruitPost | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // unlock input
   const [password, setPassword] = useState("");
   const [unlocking, setUnlocking] = useState(false);
 
-  // delete modal for guest
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePw, setDeletePw] = useState("");
 
@@ -91,7 +77,6 @@ export default function QaDetailPage() {
 
   useEffect(() => {
     if (Number.isFinite(postId)) fetchPost();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
   const onUnlock = async () => {
@@ -174,8 +159,6 @@ export default function QaDetailPage() {
             <>
               <button
                 onClick={() => {
-                  // ✅ 게스트 비밀글이면 unlock 비번으로 edit에 password 쿼리 넘겨주기
-                  // (잠금 상태에서 버튼이 안 보이긴 하지만 안전장치)
                   if (post.authorType === "GUEST" && post.secret && locked) {
                     alert("비밀번호를 먼저 입력해주세요.");
                     return;
