@@ -1,4 +1,3 @@
-// src/components/RulesUpsertModal.tsx
 import { useEffect, useMemo, useState } from "react";
 
 type Props = {
@@ -53,12 +52,29 @@ export default function RulesUpsertModal({ open, initialContent, onClose, onSubm
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder={"예) **강조 텍스트** 로 굵게 표시할 수 있어요.\n\n제1조(명칭)\n본 회는 ..."}
-            className="w-full min-h-[380px] rounded-2xl border border-gray-200 bg-white p-4 text-sm font-semibold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200 whitespace-pre-wrap"
+            placeholder={[
+              "예)",
+              "# 제 1 장 총칙",
+              "",
+              "## 제 1조 (명칭, 뜻)",
+              "본회는 ...",
+              "",
+              "✅ 굵게: **강조 텍스트**",
+              "✅ 줄바꿈: 엔터 그대로 반영됩니다.",
+            ].join("\n")}
+            className="w-full min-h-[380px] rounded-2xl border border-gray-200 bg-white p-4 text-sm font-semibold text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200 whitespace-pre-wrap font-paperlogy"
           />
 
-          <div className="mt-3 text-xs text-gray-400 font-semibold">
-            ✅ 굵게 강조: <span className="font-black text-gray-600">**텍스트**</span>
+          <div className="mt-3 text-xs text-gray-400 font-semibold space-y-1">
+            <div>
+              ✅ 굵게 강조: <span className="font-black text-gray-600">**텍스트**</span>
+            </div>
+            <div>
+              ✅ 제목 크기: <span className="font-black text-gray-600">#</span> (큰 제목),{" "}
+              <span className="font-black text-gray-600">##</span> (중간),{" "}
+              <span className="font-black text-gray-600">###</span> (소제목)
+            </div>
+            <div>✅ 줄바꿈: 엔터 그대로 화면에 반영됩니다.</div>
           </div>
         </div>
 

@@ -6,7 +6,6 @@ export function currentDecade() {
 }
 
 export function decadeLabel(decade: number) {
-  if (decade === 1990) return "1992~1999";
   return `${decade}년대`;
 }
 

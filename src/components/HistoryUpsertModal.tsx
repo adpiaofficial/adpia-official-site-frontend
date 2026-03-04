@@ -7,16 +7,19 @@ type Props = {
   initial: HistoryItem | null;
   onClose: () => void;
   onSubmit: (req: { year: number; month: number; content: string; sortOrder: number }) => Promise<void> | void;
+
+  // ✅ 추가
+  onDelete?: (id: number) => Promise<void> | void;
 };
 
-
-export default function HistoryUpsertModal({ open, mode, initial, onClose, onSubmit }: Props) {
+export default function HistoryUpsertModal({ open, mode, initial, onClose, onSubmit, onDelete }: Props) {
   const [year, setYear] = useState<string>("");
   const [month, setMonth] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<string>("");
   const [content, setContent] = useState<string>("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const title = mode === "create" ? "연혁 추가" : "연혁 수정";
 
@@ -53,44 +56,23 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
   };
 
   const handleSubmit = async () => {
-    if (submitting) return;
+    if (submitting || deleting) return;
 
     const y = parseIntOrNull(year);
     const m = parseIntOrNull(month);
     const s = sortOrder.trim() === "" ? 0 : parseIntOrNull(sortOrder);
 
-    if (y == null) {
-      alert("연도를 입력해주세요.");
-      return;
-    }
-    if (y < 1900 || y > 2200) {
-      alert("연도 범위가 올바르지 않습니다. (1900~2200)");
-      return;
-    }
+    if (y == null) return alert("연도를 입력해주세요.");
+    if (y < 1900 || y > 2200) return alert("연도 범위가 올바르지 않습니다. (1900~2200)");
 
-    if (m == null) {
-      alert("월을 입력해주세요.");
-      return;
-    }
-    if (m < 1 || m > 12) {
-      alert("월은 1~12만 가능합니다.");
-      return;
-    }
+    if (m == null) return alert("월을 입력해주세요.");
+    if (m < 1 || m > 12) return alert("월은 1~12만 가능합니다.");
 
-    if (s == null) {
-      alert("정렬 순서는 숫자여야 합니다. (0부터 순서대로)");
-      return;
-    }
-    if (s < 0) {
-      alert("정렬 순서는 0 이상이어야 합니다.");
-      return;
-    }
+    if (s == null) return alert("정렬 순서는 숫자여야 합니다. (0부터 순서대로)");
+    if (s < 0) return alert("정렬 순서는 0 이상이어야 합니다.");
 
     const c = content.trim();
-    if (!c) {
-      alert("내용을 입력해주세요.");
-      return;
-    }
+    if (!c) return alert("내용을 입력해주세요.");
 
     setSubmitting(true);
     try {
@@ -104,16 +86,31 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
     }
   };
 
+  const handleDelete = async () => {
+    if (deleting || submitting) return;
+    if (mode !== "edit" || !initial?.id) return;
+    if (!onDelete) return;
+
+    const ok = window.confirm("정말 삭제할까요? 삭제하면 복구할 수 없습니다.");
+    if (!ok) return;
+
+    setDeleting(true);
+    try {
+      await onDelete(initial.id);
+      onClose();
+    } catch (e) {
+      console.warn("연혁 삭제 실패", e);
+      alert("삭제에 실패했습니다. (권한/네트워크 확인)");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
-        aria-label="닫기"
-      />
+    <div className="fixed inset-0 z-[200] flex items-center justify-center font-paperlogy">
+      <button type="button" onClick={onClose} className="absolute inset-0 bg-black/40" aria-label="닫기" />
 
       <div className="relative w-[92vw] max-w-3xl bg-white rounded-[2rem] border border-gray-100 shadow-[0_30px_80px_rgba(0,0,0,0.18)] overflow-hidden">
         <div className="p-6 md:p-8 border-b border-gray-100">
@@ -121,14 +118,13 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
             <div>
               <p className="text-xs font-black tracking-[0.25em] text-[#813eb6]">HISTORY</p>
               <h2 className="mt-2 text-xl md:text-2xl font-black text-gray-900">{title}</h2>
-              <p className="mt-1 text-sm font-bold text-gray-400">
-                연도/월/내용을 입력하고 저장하세요.
-              </p>
+              <p className="mt-1 text-sm font-bold text-gray-400">연도/월/내용을 입력하고 저장하세요.</p>
             </div>
 
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-2xl border border-gray-200 text-sm font-black text-gray-600 hover:text-[#813eb6] hover:border-purple-200"
+              disabled={submitting || deleting}
             >
               닫기
             </button>
@@ -155,7 +151,7 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
                 type="number"
                 inputMode="numeric"
                 value={month}
-                onChange={(e) => setMonth(e.target.value)} 
+                onChange={(e) => setMonth(e.target.value)}
                 placeholder="1~12"
                 className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-white text-lg font-black text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
               />
@@ -168,7 +164,7 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
               type="number"
               inputMode="numeric"
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)} 
+              onChange={(e) => setSortOrder(e.target.value)}
               placeholder="0부터 순서대로"
               className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-white text-base font-black text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
             />
@@ -189,21 +185,37 @@ export default function HistoryUpsertModal({ open, mode, initial, onClose, onSub
           </div>
         </div>
 
-        <div className="p-6 md:p-8 border-t border-gray-100 flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-5 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-700 hover:text-[#813eb6] hover:border-purple-200"
-            disabled={submitting}
-          >
-            취소
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="px-6 py-3 rounded-2xl bg-[#813eb6] text-white text-sm font-black hover:opacity-90 disabled:opacity-50"
-          >
-            {submitting ? "저장 중..." : "저장"}
-          </button>
+        <div className="p-6 md:p-8 border-t border-gray-100 flex items-center justify-between gap-3">
+          {/* ✅ 왼쪽: 삭제 (edit일 때만) */}
+          <div>
+            {mode === "edit" && initial?.id && onDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={submitting || deleting}
+                className="px-5 py-3 rounded-2xl border border-red-200 bg-white text-sm font-black text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deleting ? "삭제 중..." : "삭제"}
+              </button>
+            )}
+          </div>
+
+          {/* 오른쪽: 취소/저장 */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="px-5 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-700 hover:text-[#813eb6] hover:border-purple-200"
+              disabled={submitting || deleting}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting || deleting}
+              className="px-6 py-3 rounded-2xl bg-[#813eb6] text-white text-sm font-black hover:opacity-90 disabled:opacity-50"
+            >
+              {submitting ? "저장 중..." : "저장"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

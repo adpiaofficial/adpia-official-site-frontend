@@ -36,3 +36,7 @@ export async function updateHistory(id: number, req: HistoryCreateRequest): Prom
   const res = await httpClient.patch<HistoryItem>(`/admin/history/${id}`, req);
   return res.data;
 }
+
+export async function deleteHistory(id: number): Promise<void> {
+  await httpClient.delete(`/admin/history/${id}`);
+}

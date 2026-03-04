@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+
 import { useAuth } from "../contexts/AuthContext";
 import RulesUpsertModal from "../components/RulesUpsertModal";
 import { getRules, upsertRules, type RulesDoc } from "../api/rulesApi";
@@ -14,7 +17,6 @@ export default function RulesPage() {
 
   const [doc, setDoc] = useState<RulesDoc | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [modalOpen, setModalOpen] = useState(false);
 
   const fetchDoc = async () => {
@@ -71,40 +73,36 @@ export default function RulesPage() {
           회칙이 없습니다.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6 md:p-10">
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6 md:p-10 font-paperlogy">
           <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkBreaks]} // ✅ 단일 줄바꿈도 <br/>로 반영
             components={{
-              // 줄바꿈/문단 기본 스타일
-              p: ({ node, ...props }) => (
-                <p className="text-[15px] md:text-[16px] leading-relaxed text-gray-800 mb-4" {...props} />
+              // 문단
+              p: ({ ...props }) => (
+                <p
+                  className="text-[15px] md:text-[16px] leading-relaxed text-gray-800 mb-4 whitespace-pre-wrap"
+                  {...props}
+                />
               ),
-              // 굵게(강조)만 예쁘게
-              strong: ({ node, ...props }) => (
-                <strong className="font-black text-gray-900" {...props} />
+              // 줄바꿈 태그 (remark-breaks가 만들어줌)
+              br: ({ ...props }) => <br {...props} />,
+              // 굵게
+              strong: ({ ...props }) => <strong className="font-black text-gray-900" {...props} />,
+              // 제목(마크다운 # ## ### 쓰면 자동 적용)
+              h1: ({ ...props }) => <h1 className="text-xl md:text-2xl font-black text-gray-900 mt-8 mb-4" {...props} />,
+              h2: ({ ...props }) => <h2 className="text-lg md:text-xl font-black text-gray-900 mt-7 mb-3" {...props} />,
+              h3: ({ ...props }) => <h3 className="text-base md:text-lg font-black text-gray-900 mt-6 mb-2" {...props} />,
+              // 리스트
+              ul: ({ ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
+              ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
+              li: ({ ...props }) => (
+                <li className="text-[15px] md:text-[16px] leading-relaxed text-gray-800 whitespace-pre-wrap" {...props} />
               ),
-              // 제목 스타일(혹시 사용하면)
-              h1: ({ node, ...props }) => (
-                <h1 className="text-xl md:text-2xl font-black text-gray-900 mt-8 mb-4" {...props} />
-              ),
-              h2: ({ node, ...props }) => (
-                <h2 className="text-lg md:text-xl font-black text-gray-900 mt-7 mb-3" {...props} />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3 className="text-base md:text-lg font-black text-gray-900 mt-6 mb-2" {...props} />
-              ),
-              // 리스트도 혹시 들어오면 보기 좋게
-              ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
-              ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
-              li: ({ node, ...props }) => (
-                <li className="text-[15px] md:text-[16px] leading-relaxed text-gray-800" {...props} />
-              ),
-              // 구분선
-              hr: ({ node, ...props }) => <hr className="my-8 border-gray-200" {...props} />,
+              hr: ({ ...props }) => <hr className="my-8 border-gray-200" {...props} />,
             }}
           >
             {doc.content}
           </ReactMarkdown>
-
         </div>
       )}
 

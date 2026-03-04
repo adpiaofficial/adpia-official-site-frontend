@@ -3,6 +3,7 @@ import HistoryTimeline from "../components/HistoryTimeline";
 import HistoryUpsertModal from "../components/HistoryUpsertModal";
 import {
   createHistory,
+  deleteHistory,
   getHistories,
   getHistoryDecades,
   type HistoryItem,
@@ -33,20 +34,30 @@ export default function HistoryPage() {
 
   const sortedDecades = useMemo(() => [...decades].sort((a, b) => b - a), [decades]);
 
+  const refetchDecades = async () => {
+    const ds = await getHistoryDecades();
+    setDecades(ds);
+
+    // ✅ 현재 선택 decade가 없어졌으면(삭제로 인해) 최신 decade로 이동
+    const nextLatest = [...ds].sort((a, b) => b - a)[0] ?? null;
+    setDecade((prev) => {
+      if (prev == null) return nextLatest;
+      if (!ds.includes(prev)) return nextLatest;
+      return prev;
+    });
+  };
+
   useEffect(() => {
     (async () => {
       try {
-        const ds = await getHistoryDecades();
-        setDecades(ds);
-
-        const latest = [...ds].sort((a, b) => b - a)[0] ?? null;
-        setDecade((prev) => prev ?? latest); 
+        await refetchDecades();
       } catch (e) {
         console.warn("history decades 로딩 실패", e);
         setDecades([]);
         setDecade(null);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchList = async (d: number) => {
@@ -62,6 +73,7 @@ export default function HistoryPage() {
   useEffect(() => {
     if (decade == null) return;
     fetchList(decade);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decade]);
 
   const openCreate = () => {
@@ -79,26 +91,36 @@ export default function HistoryPage() {
   };
 
   const submit = async (req: { year: number; month: number; content: string; sortOrder: number }) => {
-    if (!canEdit) {
-      alert("권한이 없습니다.");
-      return;
-    }
+    if (!canEdit) return alert("권한이 없습니다.");
+
     if (mode === "create") {
       await createHistory(req);
     } else if (editing) {
       await updateHistory(editing.id, req);
     }
 
-    const ds = await getHistoryDecades();
-    setDecades(ds);
+    await refetchDecades();
+    if (decade != null) {
+      await fetchList(decade);
+    }
+  };
 
+  const handleDelete = async (id: number) => {
+    if (!canEdit) return alert("권한이 없습니다.");
+
+    await deleteHistory(id);
+
+    // ✅ 삭제 후: 목차 재조회 -> decade가 바뀔 수도 있으니 refetchDecades 먼저
+    await refetchDecades();
+
+    // ✅ 현재 decade로 다시 리스트 갱신(혹은 decade가 바뀌면 useEffect가 자동 호출됨)
     if (decade != null) {
       await fetchList(decade);
     }
   };
 
   return (
-    <div className="pt-24 md:pt-28 max-w-6xl mx-auto px-4 sm:px-6 pb-24">
+    <div className="pt-24 md:pt-28 max-w-6xl mx-auto px-4 sm:px-6 pb-24 font-paperlogy">
       <div className="text-center mb-16">
         <p className="tracking-[0.3em] text-[#813eb6] text-sm font-black">HISTORY</p>
         <h1 className="text-3xl md:text-5xl font-black mt-4 text-gray-900">애드피아 연혁</h1>
@@ -156,6 +178,7 @@ export default function HistoryPage() {
         initial={editing}
         onClose={() => setModalOpen(false)}
         onSubmit={submit}
+        onDelete={handleDelete}
       />
     </div>
   );
