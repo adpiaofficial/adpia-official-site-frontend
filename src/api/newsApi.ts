@@ -1,5 +1,5 @@
 import httpClient from "./httpClient";
-import type { PageResponse, RecruitPost } from "./recruitApi";
+import type { PageResponse, RecruitPost, RecruitPostUpsertRequest } from "./recruitApi";
 
 export async function getNewsPosts(page = 0, size = 15) {
   const res = await httpClient.get<PageResponse<RecruitPost>>("/news/posts", {
@@ -9,17 +9,17 @@ export async function getNewsPosts(page = 0, size = 15) {
 }
 
 export async function getNewsPost(id: number) {
-  const res = await httpClient.get(`/news/posts/${id}`);
+  const res = await httpClient.get<RecruitPost>(`/news/posts/${id}`);
   return res.data;
 }
 
-export async function createNewsPost(req: any) {
-  const res = await httpClient.post("/news/posts", req);
+export async function createNewsPost(req: RecruitPostUpsertRequest) {
+  const res = await httpClient.post<RecruitPost>("/news/posts", req);
   return res.data;
 }
 
-export async function updateNewsPost(id: number, req: any) {
-  const res = await httpClient.patch(`/news/posts/${id}`, req);
+export async function updateNewsPost(id: number, req: RecruitPostUpsertRequest) {
+  const res = await httpClient.patch<RecruitPost>(`/news/posts/${id}`, req);
   return res.data;
 }
 

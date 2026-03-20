@@ -1,4 +1,3 @@
-// src/api/executiveApi.ts
 import httpClient from "./httpClient";
 
 export type AdminExecutiveMemberRequest = {

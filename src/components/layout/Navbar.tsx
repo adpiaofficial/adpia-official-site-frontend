@@ -54,8 +54,8 @@ export default function Navbar() {
           { name: "경쟁 PT", path: "/archive/pt" },
           { name: "사회공헌프로젝트", path: "/archive/social" },
           { name: "광고제", path: "/archive/festival" },
-          { name: "백문백답", path: "/archive/qna" },
-          { name: "3분 스피치", path: "/archive/speech" },
+          { name: "백문백답", path: "/archive/hundred-qna" },
+          { name: "3분 스피치", path: "/archive/three-minute-speech" },
           { name: "광고학개론", path: "/archive/intro" },
           {
             name: "N cafe",

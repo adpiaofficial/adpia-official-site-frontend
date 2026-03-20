@@ -4,6 +4,8 @@ import {
   createRecruitComment,
   deleteRecruitComment,
   getRecruitComments,
+  likeRecruitComment,
+  unlikeRecruitComment,
   type RecruitComment,
 } from "../api/recruitApi";
 
@@ -24,7 +26,6 @@ function formatDT(iso: string) {
 
 type Props = { postId: number };
 
-// ✅ A 방식: deleted 댓글은 숨기고, 자식 댓글은 "승격"해서 보여줌
 function pruneDeleted(arr: RecruitComment[]): RecruitComment[] {
   const out: RecruitComment[] = [];
 
@@ -32,7 +33,6 @@ function pruneDeleted(arr: RecruitComment[]): RecruitComment[] {
     const nextChildren = c.children ? pruneDeleted(c.children) : [];
 
     if (c.deleted) {
-      // 부모가 삭제되면 부모는 숨기고 자식만 위로 올린다
       out.push(...nextChildren);
     } else {
       out.push({ ...c, children: nextChildren });
@@ -48,7 +48,6 @@ export default function RecruitComments({ postId }: Props) {
   const [items, setItems] = useState<RecruitComment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // root 작성
   const [content, setContent] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestPw, setGuestPw] = useState("");
@@ -67,7 +66,6 @@ export default function RecruitComments({ postId }: Props) {
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
   const onCreateRoot = async () => {
@@ -90,11 +88,10 @@ export default function RecruitComments({ postId }: Props) {
 
   const canDelete = (c: RecruitComment) => {
     if (isAdminRole(user?.role)) return true;
-    if (!user) return true; // 게스트는 비번으로 삭제 가능
+    if (!user) return true;
     return c.authorType === "MEMBER" && c.authorMemberId === user.id;
   };
 
-  // ✅ 렌더/카운트용: 삭제된 댓글은 숨기고, 자식은 승격
   const visibleItems = useMemo(() => pruneDeleted(items), [items]);
 
   const CommentNode = ({ c, depth }: { c: RecruitComment; depth: number }) => {
@@ -136,10 +133,34 @@ export default function RecruitComments({ postId }: Props) {
       await refresh();
     };
 
+    const onToggleLike = async () => {
+      if (!user) {
+        alert("좋아요는 로그인 후 사용할 수 있습니다.");
+        return;
+      }
+
+      try {
+        if (c.likedByMe) {
+          await unlikeRecruitComment(c.id);
+        } else {
+          await likeRecruitComment(c.id);
+        }
+        await refresh();
+      } catch (e: any) {
+        const status = e?.response?.status;
+        if (status === 401) alert("로그인이 필요합니다.");
+        else if (status === 403) alert("권한이 없습니다.");
+        else if (status === 404) alert("댓글 좋아요 API를 찾을 수 없습니다.");
+        else alert(e?.response?.data?.message || "댓글 좋아요 처리 실패");
+      }
+    };
+
+    const liked = !!c.likedByMe;
+
     return (
-      <div className="py-4" style={{ paddingLeft: depth * 16 }}>
+      <div className="py-4" style={{ paddingLeft: Math.min(depth, 4) * 16 }}>
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 w-full">
             <div className="flex flex-wrap items-center gap-2">
               <div className="text-sm font-black text-gray-900">
                 {c.authorName ?? (c.authorType === "MEMBER" ? "MEMBER" : "GUEST")}
@@ -147,17 +168,32 @@ export default function RecruitComments({ postId }: Props) {
               <div className="text-xs font-bold text-gray-400">{formatDT(c.createdAt)}</div>
             </div>
 
-            {/* ✅ 삭제된 댓글은 visibleItems 단계에서 제거되므로 메시지 표시/분기 필요 없음 */}
-            <div className="mt-2 text-sm font-bold text-gray-700 whitespace-pre-wrap">
+            <div className="mt-2 text-sm font-bold text-gray-700 whitespace-pre-wrap break-words">
               {c.content}
             </div>
 
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setReplyOpen((v) => !v)}
                 className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-[12px] font-black text-gray-700 hover:text-[#813eb6]"
               >
                 {replyOpen ? "취소" : "답글"}
+              </button>
+
+              <button
+                onClick={onToggleLike}
+                className={[
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[12px] font-black transition-all",
+                  liked
+                    ? "border-pink-200 bg-pink-50 text-pink-600 shadow-sm"
+                    : "border-gray-200 bg-white text-gray-700 hover:text-[#813eb6] hover:border-purple-200",
+                ].join(" ")}
+              >
+                <span>{liked ? "❤️" : "🤍"}</span>
+                <span>좋아요</span>
+                <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-white/80 border border-current/10 text-[10px] font-black">
+                  {c.likeCount ?? 0}
+                </span>
               </button>
 
               {canDelete(c) && (
@@ -220,7 +256,6 @@ export default function RecruitComments({ postId }: Props) {
     );
   };
 
-  // ✅ count도 visibleItems 기준으로
   const count = useMemo(() => {
     const dfs = (arr: RecruitComment[]): number =>
       arr.reduce((acc, c) => acc + 1 + (c.children ? dfs(c.children) : 0), 0);

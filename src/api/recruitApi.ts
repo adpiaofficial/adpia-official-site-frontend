@@ -12,7 +12,12 @@ export type PageResponse<T> = {
   empty: boolean;
 };
 
-export type RecruitBoardCode = "NOTICE" | "QA" | "NEWS";
+export type RecruitBoardCode =
+  | "NOTICE"
+  | "QA"
+  | "NEWS"
+  | "HUNDRED_QNA"
+  | "THREE_MIN_SPEECH";
 
 export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
 
@@ -23,7 +28,7 @@ export type RecruitBlockRequest = {
   sortOrder: number;
   text?: string;
   url?: string;
-  meta?: string; // json string
+  meta?: string;
 };
 
 export type RecruitBlockResponse = {
@@ -37,7 +42,7 @@ export type RecruitBlockResponse = {
 export type RecruitPost = {
   id: number;
   boardCode: RecruitBoardCode;
-  status?: RecruitPostStatus; // ✅ 추가 (백이 내려주면 사용)
+  status?: RecruitPostStatus;
   title: string;
 
   authorMemberId?: number | null;
@@ -49,31 +54,27 @@ export type RecruitPost = {
   commentEnabled: boolean;
   likeEnabled: boolean;
   viewCount: number;
+  likedByMe?: boolean;
+  likeCount?: number;
 
   createdAt: string;
   updatedAt: string;
 
   blocks: RecruitBlockResponse[];
-
-  /** ✅ secret 글인데 비번 없이 조회하면 서버가 locked=true로 내려주는 패턴 */
   locked?: boolean;
 };
 
 export type RecruitPostUpsertRequest = {
   title: string;
-
   authorName?: string;
   secret?: boolean;
   password?: string;
-
   pinned?: boolean;
   commentEnabled?: boolean;
   likeEnabled?: boolean;
-
   blocks?: RecruitBlockRequest[];
 };
 
-/** ✅ Draft 생성 요청 */
 export type RecruitDraftCreateRequest = {
   title?: string;
   authorName?: string;
@@ -81,7 +82,6 @@ export type RecruitDraftCreateRequest = {
   password?: string;
 };
 
-/** 목록 */
 export async function getRecruitPosts(boardCode: RecruitBoardCode, page = 0, size = 10) {
   const res = await httpClient.get<PageResponse<RecruitPost>>(`/recruit/${boardCode}/posts`, {
     params: { page, size },
@@ -89,7 +89,6 @@ export async function getRecruitPosts(boardCode: RecruitBoardCode, page = 0, siz
   return res.data;
 }
 
-/** 상세 (secret 글 unlock 용 password query 지원) */
 export async function getRecruitPost(id: number, password?: string) {
   const res = await httpClient.get<RecruitPost>(`/recruit/posts/${id}`, {
     params: password ? { password } : undefined,
@@ -97,13 +96,11 @@ export async function getRecruitPost(id: number, password?: string) {
   return res.data;
 }
 
-/** ✅ Draft 생성: "작성 시작" 눌렀을 때만 호출 */
 export async function createRecruitDraft(boardCode: RecruitBoardCode, req: RecruitDraftCreateRequest) {
   const res = await httpClient.post<RecruitPost>(`/recruit/${boardCode}/draft`, req);
   return res.data;
 }
 
-/** ✅ 발행(PUBLISH): draftId를 최종 저장(발행)로 전환 */
 export async function publishRecruitPost(id: number, req: RecruitPostUpsertRequest, password?: string) {
   const res = await httpClient.post<RecruitPost>(`/recruit/posts/${id}/publish`, req, {
     params: password ? { password } : undefined,
@@ -111,7 +108,6 @@ export async function publishRecruitPost(id: number, req: RecruitPostUpsertReque
   return res.data;
 }
 
-/** 수정 (발행글 수정) */
 export async function updateRecruitPost(id: number, req: RecruitPostUpsertRequest, password?: string) {
   const res = await httpClient.patch<RecruitPost>(`/recruit/posts/${id}`, req, {
     params: password ? { password } : undefined,
@@ -119,7 +115,6 @@ export async function updateRecruitPost(id: number, req: RecruitPostUpsertReques
   return res.data;
 }
 
-/** 삭제 */
 export async function deleteRecruitPost(id: number, password?: string) {
   const res = await httpClient.delete(`/recruit/posts/${id}`, {
     params: password ? { password } : undefined,
@@ -127,7 +122,6 @@ export async function deleteRecruitPost(id: number, password?: string) {
   return res.data;
 }
 
-/** 핀 토글 */
 export async function updateRecruitPostPin(id: number, pinned: boolean) {
   await httpClient.patch(`/recruit/posts/${id}/pin`, { pinned });
 }
@@ -151,14 +145,16 @@ export type RecruitComment = {
   createdAt: string;
   updatedAt?: string | null;
 
+  likeCount?: number;
+  likedByMe?: boolean;
+
+
   children: RecruitComment[];
 };
 
 export type RecruitCommentCreateRequest = {
   parentId?: number | null;
   content: string;
-
-  // 게스트 댓글
   authorName?: string;
   password?: string;
 };
@@ -178,4 +174,12 @@ export async function deleteRecruitComment(commentId: number, password?: string)
     params: password ? { password } : undefined,
   });
   return res.data;
+}
+
+export async function likeRecruitComment(commentId: number) {
+  await httpClient.post(`/recruit/comments/${commentId}/like`);
+}
+
+export async function unlikeRecruitComment(commentId: number) {
+  await httpClient.delete(`/recruit/comments/${commentId}/like`);
 }

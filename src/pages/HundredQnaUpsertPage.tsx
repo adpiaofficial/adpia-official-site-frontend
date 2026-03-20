@@ -1,0 +1,182 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import type { RecruitBlockRequest } from "../api/recruitApi";
+import { useAuth } from "../contexts/AuthContext";
+import BlockEditor from "../components/BlockEditor";
+import { createHundredQnaPost, getHundredQnaPost, updateHundredQnaPost } from "../api/hundredQnaApi";
+
+function isAdminRole(role?: string | null) {
+  return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
+}
+
+export default function HundredQnaUpsertPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user, loading: authLoading } = useAuth();
+
+  const isEdit = useMemo(() => Boolean(id), [id]);
+  const postId = Number(id);
+
+  const canEdit = isAdminRole(user?.role);
+
+  const [loading, setLoading] = useState(isEdit);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([
+    { type: "TEXT", sortOrder: 0, text: "" },
+  ]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!canEdit) {
+      alert("권한이 없습니다.");
+      navigate("/archive/hundred-qna", { replace: true });
+    }
+  }, [authLoading, canEdit, navigate]);
+
+  useEffect(() => {
+    if (!isEdit || !Number.isFinite(postId)) return;
+
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const data = await getHundredQnaPost(postId);
+        setTitle(data.title ?? "");
+        setBlocks(
+          data.blocks?.length
+            ? data.blocks.map((b, idx) => ({
+                type: b.type,
+                sortOrder: b.sortOrder ?? idx,
+                text: b.text ?? undefined,
+                url: b.url ?? undefined,
+                meta: b.meta ?? undefined,
+              }))
+            : [{ type: "TEXT", sortOrder: 0, text: "" }]
+        );
+      } catch (e: any) {
+        alert(e?.response?.data?.message || "백문백답 글 조회 실패");
+        navigate("/archive/hundred-qna", { replace: true });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [isEdit, postId, navigate]);
+
+  const normalizeBlocks = (items: RecruitBlockRequest[]) =>
+    items.map((b, index) => ({
+      ...b,
+      sortOrder: index,
+      text: b.type === "TEXT" ? b.text ?? "" : b.text,
+    }));
+
+  const onSubmit = async () => {
+    if (!title.trim()) return alert("제목을 입력해주세요.");
+
+    const normalizedBlocks = normalizeBlocks(blocks);
+
+    setSubmitting(true);
+    try {
+      if (isEdit) {
+        const saved = await updateHundredQnaPost(postId, {
+          title: title.trim(),
+          blocks: normalizedBlocks,
+        });
+        alert("수정되었습니다.");
+        navigate(`/archive/hundred-qna/${saved.id}`, { replace: true });
+      } else {
+        const saved = await createHundredQnaPost({
+          title: title.trim(),
+          blocks: normalizedBlocks,
+        });
+        alert("등록되었습니다.");
+        navigate(`/archive/hundred-qna/${saved.id}`, { replace: true });
+      }
+    } catch (e: any) {
+      const status = e?.response?.status;
+      if (status === 401) navigate("/login");
+      else if (status === 403) alert("권한이 없습니다.");
+      else alert(e?.response?.data?.message || "저장 실패");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="pt-24 md:pt-28 max-w-4xl mx-auto px-4 sm:px-6 pb-24">
+        <div className="h-40 rounded-3xl border border-gray-100 bg-white shadow-sm animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-24 md:pt-28 max-w-4xl mx-auto px-4 sm:px-6 pb-24 font-paperlogy">
+      <div className="flex items-center justify-between gap-3">
+        <button
+          onClick={() => navigate("/archive/hundred-qna")}
+          className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-black text-gray-700 hover:text-[#813eb6] hover:border-purple-200 transition-all"
+        >
+          ← 목록
+        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-black text-gray-700 hover:text-[#813eb6] hover:border-purple-200 transition-all"
+          >
+            취소
+          </button>
+          <button
+            disabled={submitting}
+            onClick={onSubmit}
+            className="px-5 py-2 rounded-xl bg-[#813eb6] text-white text-sm font-black hover:bg-[#6e33a1] disabled:opacity-50"
+          >
+            {submitting ? "저장 중..." : isEdit ? "수정하기" : "등록하기"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[2.5rem] border border-gray-100 bg-white shadow-sm overflow-hidden">
+        <div className="p-6 md:p-8 bg-gradient-to-br from-purple-50 via-white to-white">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-xs font-black text-[#813eb6]">
+            ARCHIVE
+          </div>
+          <h1 className="mt-3 text-2xl md:text-3xl font-black text-gray-900">
+            {isEdit ? "백문백답 수정" : "백문백답 작성"}
+          </h1>
+          <p className="mt-2 text-sm font-bold text-gray-500">
+            제목과 본문 블록을 입력해 백문백답 글을 등록하세요.
+          </p>
+        </div>
+
+        <div className="p-6 md:p-8 border-t border-gray-100 space-y-6">
+          <div>
+            <label className="block text-sm font-black text-gray-800 mb-2">제목</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="제목을 입력하세요"
+              className="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm font-bold text-gray-700 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200"
+            />
+          </div>
+
+          <div>
+            <div>
+                <div className="block text-sm font-black text-gray-800 mb-2">본문</div>
+                <BlockEditor
+                    boardCode="HUNDRED_QNA"
+                    postId={isEdit ? postId : 0}
+                    value={blocks}
+                    onChange={setBlocks}
+                    disabled={submitting}
+                />
+                </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

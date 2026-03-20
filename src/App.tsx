@@ -29,6 +29,12 @@ import NewsDetailPage from "./pages/NewsDetailPage";
 import NewsUpsertPage from "./pages/NewsUpsertPage";
 import BrandPage from "./pages/BrandPage";
 
+import HundredQnaListPage from "./pages/HundredQnaListPage";
+import HundredQnaDetailPage from "./pages/HundredQnaDetailPage";
+import HundredQnaUpsertPage from "./pages/HundredQnaUpsertPage";
+import ThreeMinuteSpeechListPage from "./pages/ThreeMinuteSpeechListPage";
+import ThreeMinuteSpeechDetailPage from "./pages/ThreeMinuteSpeechDetailPage";
+import ThreeMinuteSpeechUpsertPage from "./pages/ThreeMinuteSpeechUpsertPage";
 
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
@@ -72,6 +78,16 @@ function App() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+
+          <Route path="/archive/hundred-qna" element={<HundredQnaListPage />} />
+          <Route path="/archive/hundred-qna/:id" element={<HundredQnaDetailPage />} />
+          <Route path="/archive/hundred-qna/new" element={<AdminRoute><HundredQnaUpsertPage /></AdminRoute>} />
+          <Route path="/archive/hundred-qna/:id/edit" element={<AdminRoute><HundredQnaUpsertPage /></AdminRoute>} />
+
+          <Route path="/archive/three-minute-speech" element={<ThreeMinuteSpeechListPage />} />
+          <Route path="/archive/three-minute-speech/:id" element={<ThreeMinuteSpeechDetailPage />} />
+          <Route path="/archive/three-minute-speech/new" element={<AdminRoute><ThreeMinuteSpeechUpsertPage /></AdminRoute>} />
+          <Route path="/archive/three-minute-speech/:id/edit" element={<AdminRoute><ThreeMinuteSpeechUpsertPage /></AdminRoute>} />
 
           {/* ✅ ADMIN */}
           <Route
