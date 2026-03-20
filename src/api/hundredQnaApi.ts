@@ -38,3 +38,16 @@ export async function likeHundredQnaPost(id: number) {
 export async function unlikeHundredQnaPost(id: number) {
   await httpClient.delete(`/hundred-qna/posts/${id}/like`);
 }
+
+export type HundredQnaCommentStat = {
+  memberId: number;
+  memberName: string;
+  department: string;
+  generation: number;
+  commentCount: number;
+};
+
+export async function getHundredQnaCommentStats() {
+  const res = await httpClient.get<HundredQnaCommentStat[]>("/hundred-qna/comment-stats");
+  return res.data;
+}

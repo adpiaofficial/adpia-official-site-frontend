@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import type { RecruitPost, PageResponse } from "../api/recruitApi";
-import { getHundredQnaPosts, updateHundredQnaPin } from "../api/hundredQnaApi";
+import {
+  getHundredQnaPosts,
+  updateHundredQnaPin,
+  getHundredQnaCommentStats,
+  type HundredQnaCommentStat,
+} from "../api/hundredQnaApi";
 import RecruitFab from "../components/RecruitFab";
 
 function isAdminRole(role?: string | null) {
@@ -23,6 +28,9 @@ export default function HundredQnaListPage() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"latest" | "views">("latest");
 
+  const [stats, setStats] = useState<HundredQnaCommentStat[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const fetchPage = async (nextPage: number) => {
     setLoading(true);
     try {
@@ -34,9 +42,29 @@ export default function HundredQnaListPage() {
     }
   };
 
+  const fetchStats = async () => {
+    if (!canEdit) return;
+
+    setStatsLoading(true);
+    try {
+      const data = await getHundredQnaCommentStats();
+      setStats(data ?? []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPage(0);
   }, [size]);
+
+  useEffect(() => {
+    if (canEdit) {
+      fetchStats();
+    }
+  }, [canEdit]);
 
   const posts = pageData?.content ?? [];
 
@@ -127,6 +155,49 @@ export default function HundredQnaListPage() {
           </button>
         </div>
       </div>
+
+      {canEdit && (
+        <div className="mt-6 rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="text-sm font-black text-gray-900">관리자용 참여 현황</div>
+            <div className="text-xs font-bold text-gray-400">참여 인원 {stats.length}명</div>
+          </div>
+
+          {statsLoading ? (
+            <div className="p-5 text-sm font-bold text-gray-400">불러오는 중...</div>
+          ) : stats.length === 0 ? (
+            <div className="p-5 text-sm font-bold text-gray-400">집계된 댓글 참여 내역이 없습니다.</div>
+          ) : (
+            <div className="p-5">
+              <div className="grid grid-cols-12 px-3 py-2 text-xs font-black text-gray-400 bg-gray-50 rounded-2xl">
+                <div className="col-span-2">순위</div>
+                <div className="col-span-4">이름</div>
+                <div className="col-span-3">부서</div>
+                <div className="col-span-1 text-center">기수</div>
+                <div className="col-span-2 text-right">댓글 수</div>
+              </div>
+
+              <div className="mt-2 divide-y divide-gray-50">
+                {stats.slice(0, 10).map((s, index) => (
+                  <div key={s.memberId} className="grid grid-cols-12 px-3 py-3 items-center">
+                    <div className="col-span-2 text-sm font-black text-gray-700">{index + 1}</div>
+                    <div className="col-span-4 text-sm font-bold text-gray-900">{s.memberName}</div>
+                    <div className="col-span-3 text-sm font-bold text-gray-600">{s.department || "-"}</div>
+                    <div className="col-span-1 text-center text-sm font-bold text-gray-600">
+                      {s.generation > 0 ? `${s.generation}기` : "-"}
+                    </div>
+                    <div className="col-span-2 text-right">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-xs font-black text-[#813eb6]">
+                        {s.commentCount}개
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-6 bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
