@@ -13,7 +13,8 @@ export default function ThreeMinuteSpeechListPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
-  const canEdit = isAdminRole(user?.role);
+  const isAdmin = isAdminRole(user?.role);
+  const canWrite = !!user;
 
   const [pageData, setPageData] = useState<PageResponse<RecruitPost> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,7 +166,7 @@ export default function ThreeMinuteSpeechListPage() {
                   )}
                   <div className="truncate text-sm font-bold text-gray-900">{p.title}</div>
 
-                  {canEdit && (
+                  {isAdmin && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -224,7 +225,7 @@ export default function ThreeMinuteSpeechListPage() {
         </button>
       </div>
 
-      {canEdit && (
+      {canWrite && (
         <RecruitFab
           label="3분 스피치 작성"
           onClick={() => navigate("/archive/three-minute-speech/new")}

@@ -18,7 +18,8 @@ export default function HundredQnaListPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
 
-  const canEdit = isAdminRole(user?.role);
+  const isAdmin = isAdminRole(user?.role);
+  const canWrite = !!user;
 
   const [pageData, setPageData] = useState<PageResponse<RecruitPost> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,7 @@ export default function HundredQnaListPage() {
   };
 
   const fetchStats = async () => {
-    if (!canEdit) return;
+    if (!isAdmin) return;
 
     setStatsLoading(true);
     try {
@@ -61,10 +62,10 @@ export default function HundredQnaListPage() {
   }, [size]);
 
   useEffect(() => {
-    if (canEdit) {
+    if (isAdmin) {
       fetchStats();
     }
-  }, [canEdit]);
+  }, [isAdmin]);
 
   const posts = pageData?.content ?? [];
 
@@ -156,7 +157,7 @@ export default function HundredQnaListPage() {
         </div>
       </div>
 
-      {canEdit && (
+      {isAdmin && (
         <div className="mt-6 rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
             <div className="text-sm font-black text-gray-900">관리자용 참여 현황</div>
@@ -236,7 +237,7 @@ export default function HundredQnaListPage() {
                   )}
                   <div className="truncate text-sm font-bold text-gray-900">{p.title}</div>
 
-                  {canEdit && (
+                  {isAdmin && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -295,7 +296,12 @@ export default function HundredQnaListPage() {
         </button>
       </div>
 
-      {canEdit && <RecruitFab label="백문백답 작성" onClick={() => navigate("/archive/hundred-qna/new")} />}
+      {canWrite && (
+        <RecruitFab
+          label="백문백답 작성"
+          onClick={() => navigate("/archive/hundred-qna/new")}
+        />
+      )}
     </div>
   );
 }

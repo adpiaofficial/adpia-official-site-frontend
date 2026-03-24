@@ -5,10 +5,6 @@ import { useAuth } from "../contexts/AuthContext";
 import BlockEditor from "../components/BlockEditor";
 import { createHundredQnaPost, getHundredQnaPost, updateHundredQnaPost } from "../api/hundredQnaApi";
 
-function isAdminRole(role?: string | null) {
-  return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
-}
-
 export default function HundredQnaUpsertPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -17,7 +13,7 @@ export default function HundredQnaUpsertPage() {
   const isEdit = useMemo(() => Boolean(id), [id]);
   const postId = Number(id);
 
-  const canEdit = isAdminRole(user?.role);
+  const canWrite = !!user;
 
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
@@ -29,11 +25,11 @@ export default function HundredQnaUpsertPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!canEdit) {
-      alert("권한이 없습니다.");
-      navigate("/archive/hundred-qna", { replace: true });
+    if (!canWrite) {
+      alert("로그인이 필요합니다.");
+      navigate("/login", { replace: true });
     }
-  }, [authLoading, canEdit, navigate]);
+  }, [authLoading, canWrite, navigate]);
 
   useEffect(() => {
     if (!isEdit || !Number.isFinite(postId)) return;
@@ -164,16 +160,14 @@ export default function HundredQnaUpsertPage() {
           </div>
 
           <div>
-            <div>
-                <div className="block text-sm font-black text-gray-800 mb-2">본문</div>
-                <BlockEditor
-                    boardCode="HUNDRED_QNA"
-                    postId={isEdit ? postId : 0}
-                    value={blocks}
-                    onChange={setBlocks}
-                    disabled={submitting}
-                />
-                </div>
+            <div className="block text-sm font-black text-gray-800 mb-2">본문</div>
+            <BlockEditor
+              boardCode="HUNDRED_QNA"
+              postId={isEdit ? postId : 0}
+              value={blocks}
+              onChange={setBlocks}
+              disabled={submitting}
+            />
           </div>
         </div>
       </div>
