@@ -17,7 +17,8 @@ export type RecruitBoardCode =
   | "QA"
   | "NEWS"
   | "HUNDRED_QNA"
-  | "THREE_MIN_SPEECH";
+  | "THREE_MIN_SPEECH"
+  | "SEMINAR";
 
 export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
 

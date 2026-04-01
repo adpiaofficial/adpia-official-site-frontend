@@ -36,6 +36,10 @@ import ThreeMinuteSpeechListPage from "./pages/ThreeMinuteSpeechListPage";
 import ThreeMinuteSpeechDetailPage from "./pages/ThreeMinuteSpeechDetailPage";
 import ThreeMinuteSpeechUpsertPage from "./pages/ThreeMinuteSpeechUpsertPage";
 
+import SeminarListPage from "./pages/SeminarListPage";
+import SeminarDetailPage from "./pages/SeminarDetailPage";
+import SeminarUpsertPage from "./pages/SeminarUpsertPage";
+
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
 );
@@ -88,6 +92,11 @@ function App() {
           <Route path="/archive/three-minute-speech/:id" element={<ThreeMinuteSpeechDetailPage />} />
           <Route path="/archive/three-minute-speech/new" element={<ThreeMinuteSpeechUpsertPage />} />
           <Route path="/archive/three-minute-speech/:id/edit" element={<ThreeMinuteSpeechUpsertPage />} />
+
+          <Route path="/seminar/:category" element={<SeminarListPage />} />
+          <Route path="/seminar/:category/new" element={<SeminarUpsertPage />} />
+          <Route path="/seminar/:category/:id" element={<SeminarDetailPage />} />
+          <Route path="/seminar/:category/:id/edit" element={<SeminarUpsertPage />} />
 
           {/* ✅ ADMIN */}
           <Route
