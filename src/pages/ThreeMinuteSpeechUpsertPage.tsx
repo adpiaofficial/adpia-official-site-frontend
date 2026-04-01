@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RecruitBlockRequest } from "../api/recruitApi";
-import { useAuth } from "../contexts/AuthContext";
 import BlockEditor from "../components/BlockEditor";
 import {
   createThreeMinuteSpeechPost,
   getThreeMinuteSpeechPost,
   updateThreeMinuteSpeechPost,
 } from "../api/threeMinuteSpeechApi";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 export default function ThreeMinuteSpeechUpsertPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, loading: authLoading } = useAuth();
-
+  const { user, authLoading } = useRequireLoginRedirect();
   const isEdit = useMemo(() => Boolean(id), [id]);
   const postId = Number(id);
 

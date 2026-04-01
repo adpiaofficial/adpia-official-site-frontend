@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RecruitPost } from "../api/recruitApi";
-import { useAuth } from "../contexts/AuthContext";
 import RecruitBlockRenderer from "../components/RecruitBlockRenderer";
 import RecruitComments from "../components/RecruitComments";
 import {
@@ -10,6 +9,7 @@ import {
   likeHundredQnaPost,
   unlikeHundredQnaPost,
 } from "../api/hundredQnaApi";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -30,8 +30,7 @@ export default function HundredQnaDetailPage() {
   const { id } = useParams();
   const postId = Number(id);
   const navigate = useNavigate();
-  const { user } = useAuth();
-
+  const { user } = useRequireLoginRedirect();
   const [post, setPost] = useState<RecruitPost | null>(null);
   const [loading, setLoading] = useState(true);
 

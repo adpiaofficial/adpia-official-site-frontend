@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RecruitPost } from "../api/recruitApi";
-import { useAuth } from "../contexts/AuthContext";
 import RecruitBlockRenderer from "../components/RecruitBlockRenderer";
 import RecruitComments from "../components/RecruitComments";
 import {
@@ -10,6 +9,7 @@ import {
   likeThreeMinuteSpeechPost,
   unlikeThreeMinuteSpeechPost,
 } from "../api/threeMinuteSpeechApi";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
@@ -30,7 +30,8 @@ export default function ThreeMinuteSpeechDetailPage() {
   const { id } = useParams();
   const postId = Number(id);
   const navigate = useNavigate();
-  const { user } = useAuth();
+
+  const { user, authLoading } = useRequireLoginRedirect();
 
   const [post, setPost] = useState<RecruitPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,8 +52,12 @@ export default function ThreeMinuteSpeechDetailPage() {
   };
 
   useEffect(() => {
-    if (Number.isFinite(postId)) fetchPost();
-  }, [postId]);
+    if (authLoading) return;
+    if (!user) return;
+    if (Number.isFinite(postId)) {
+      fetchPost();
+    }
+  }, [authLoading, user, postId]);
 
   const onDelete = async () => {
     if (!post) return;
@@ -73,12 +78,7 @@ export default function ThreeMinuteSpeechDetailPage() {
 
   const onLikeToggle = async () => {
     if (!post) return;
-
-    if (!user) {
-      alert("좋아요는 로그인 후 사용할 수 있습니다.");
-      navigate("/login");
-      return;
-    }
+    if (!user) return;
 
     try {
       if (post.likedByMe) {
@@ -98,7 +98,7 @@ export default function ThreeMinuteSpeechDetailPage() {
 
   const liked = !!post?.likedByMe;
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="pt-24 md:pt-28 max-w-4xl mx-auto px-4 sm:px-6 pb-24">
         <div className="h-40 rounded-3xl border border-gray-100 bg-white shadow-sm animate-pulse" />

@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RecruitBlockRequest } from "../api/recruitApi";
-import { useAuth } from "../contexts/AuthContext";
 import BlockEditor from "../components/BlockEditor";
 import { createHundredQnaPost, getHundredQnaPost, updateHundredQnaPost } from "../api/hundredQnaApi";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 export default function HundredQnaUpsertPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { user, loading: authLoading } = useAuth();
-
+ const { user, authLoading } = useRequireLoginRedirect(); 
   const isEdit = useMemo(() => Boolean(id), [id]);
   const postId = Number(id);
 

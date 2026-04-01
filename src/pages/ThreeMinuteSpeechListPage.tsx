@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import type { RecruitPost, PageResponse } from "../api/recruitApi";
 import { getThreeMinuteSpeechPosts, updateThreeMinuteSpeechPin } from "../api/threeMinuteSpeechApi";
 import RecruitFab from "../components/RecruitFab";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 function isAdminRole(role?: string | null) {
   return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
@@ -11,7 +11,7 @@ function isAdminRole(role?: string | null) {
 
 export default function ThreeMinuteSpeechListPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, authLoading } = useRequireLoginRedirect();
 
   const isAdmin = isAdminRole(user?.role);
   const canWrite = !!user;
@@ -35,9 +35,11 @@ export default function ThreeMinuteSpeechListPage() {
     }
   };
 
-  useEffect(() => {
-    fetchPage(0);
-  }, [size]);
+    useEffect(() => {
+        if (authLoading) return;
+        if (!user) return;
+        fetchPage(0);
+    }, [authLoading, user, size]);
 
   const posts = pageData?.content ?? [];
 

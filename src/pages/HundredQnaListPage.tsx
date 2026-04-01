@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import type { RecruitPost, PageResponse } from "../api/recruitApi";
 import {
   getHundredQnaPosts,
@@ -9,6 +8,7 @@ import {
   type HundredQnaCommentStat,
 } from "../api/hundredQnaApi";
 import RecruitFab from "../components/RecruitFab";
+import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
 
 function isAdminRole(role?: string | null) {
   return role === "ROLE_SUPER_ADMIN" || role === "ROLE_PRESIDENT";
@@ -16,8 +16,7 @@ function isAdminRole(role?: string | null) {
 
 export default function HundredQnaListPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-
+  const { user, authLoading } = useRequireLoginRedirect();
   const isAdmin = isAdminRole(user?.role);
   const canWrite = !!user;
 
@@ -58,14 +57,18 @@ export default function HundredQnaListPage() {
   };
 
   useEffect(() => {
-    fetchPage(0);
-  }, [size]);
+  if (authLoading) return;
+  if (!user) return;
+  fetchPage(0);
+}, [authLoading, user, size]);
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchStats();
-    }
-  }, [isAdmin]);
+    useEffect(() => {
+  if (authLoading) return;
+  if (!user) return;
+  if (isAdmin) {
+    fetchStats();
+  }
+}, [authLoading, user, isAdmin]);
 
   const posts = pageData?.content ?? [];
 
