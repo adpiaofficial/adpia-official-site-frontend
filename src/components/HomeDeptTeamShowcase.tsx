@@ -1,4 +1,3 @@
-
 type Item = {
   key: string;
   name: string;
@@ -40,7 +39,7 @@ const OPERATIONS: Item[] = [
   {
     key: "partner",
     name: "대외협력팀",
-    href: "#",
+    href: "/seminar/operation",
     desc:
       "대외협력팀은 외부 기업과의 협찬 및 협업 프로젝트 전반을 담당하는 운영팀입니다.\n\n" +
       "신입 모집, MT, 체육대회, 경쟁 PT, 광고제 등 주요 활동에 필요한 기업 컨택을 진행하고,\n" +
@@ -49,7 +48,7 @@ const OPERATIONS: Item[] = [
   {
     key: "video",
     name: "영상제작팀",
-    href: "#",
+    href: "/seminar/operation",
     desc:
       "영상제작팀은 애드피아의 다양한 활동과 행사를 기록하고, 외부 바이럴 주제를 활용해 영상 콘텐츠를 기획·제작하는 운영팀입니다.\n\n" +
       "시청 트렌드에 맞춰 협찬사 홍보 영상과 활동 현장 영상을 제작하며,\n" +
@@ -58,11 +57,20 @@ const OPERATIONS: Item[] = [
   {
     key: "contents",
     name: "콘텐츠팀",
-    href: "#",
+    href: "/seminar/operation",
     desc:
       "콘텐츠팀은 각종 카드 뉴스를 직접 기획·제작하며, 매년 발간하는 회지 제작을 담당하는 운영팀입니다.\n\n" +
       "정기 콘텐츠 제작을 통해 대외적인 이미지를 구축하고,\n" +
       "진행된 각종 행사 및 프로젝트의 후기 콘텐츠를 제작하여 전반적인 활동을 아카이빙합니다.",
+  },
+  {
+    key: "event",
+    name: "행사팀",
+    href: "/seminar/operation",
+    desc:
+      "행사팀은 애드피아의 모든 행사 및 레크레이션을 기획 및 진행하는 운영팀입니다.\n\n" +
+      "겨울 워크숍, 신입생 환영회, MT, 선후배 대면식, 애드피안의 밤 등 애드피아의 주요 행사 전반을 맡아,\n" +
+      "기획부터 현장 진행까지 전 과정을 담당합니다.",
   },
 ];
 
@@ -73,9 +81,7 @@ const body = "font-pretendard";
 function StarGlow({ className }: { className?: string }) {
   return (
     <div className={`absolute pointer-events-none ${className}`}>
-      {/* 바깥쪽 퍼지는 빛 */}
       <div className="absolute inset-0 bg-white rounded-full blur-[4px] opacity-40 animate-pulse" />
-      {/* 중심점 */}
       <div className="relative w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.9)]" />
     </div>
   );
@@ -83,11 +89,13 @@ function StarGlow({ className }: { className?: string }) {
 
 function PillButton({ href }: { href: string }) {
   const disabled = href === "#";
+  const isExternal = href.startsWith("http://") || href.startsWith("https://");
+
   return (
     <a
       href={href}
-      target={disabled ? undefined : "_blank"}
-      rel={disabled ? undefined : "noreferrer"}
+      target={disabled ? undefined : isExternal ? "_blank" : undefined}
+      rel={disabled ? undefined : isExternal ? "noreferrer" : undefined}
       className={[
         "inline-flex items-center justify-center",
         "h-9 px-5 rounded-full",
@@ -120,7 +128,6 @@ function GlassCard({ text, className }: { text: string; className?: string }) {
         className,
       ].join(" ")}
     >
-      {/* 카드 자체 뽀샤시한 광택 (살짝) */}
       <div className="pointer-events-none absolute -inset-10 rounded-[3rem] bg-white/10 blur-[40px] opacity-30" />
       <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 via-white/0 to-white/0 opacity-60" />
       <div className="relative">{text}</div>
@@ -128,7 +135,6 @@ function GlassCard({ text, className }: { text: string; className?: string }) {
   );
 }
 
-/** 학술국 전용 라벨 (별 효과 포함) */
 function AcademicLabel({
   title,
   href,
@@ -140,7 +146,6 @@ function AcademicLabel({
 }) {
   return (
     <div className={`relative flex flex-col ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
-      {/* 라벨 주변 뽀샤시 블러(앵커) */}
       <div
         className={[
           "pointer-events-none absolute -top-10",
@@ -156,7 +161,6 @@ function AcademicLabel({
         ].join(" ")}
       />
 
-      {/* 장식용 별들 */}
       <StarGlow className={align === "right" ? "-top-2 -left-4" : "-top-2 -right-4"} />
       <StarGlow className={align === "right" ? "top-6 -right-6 scale-125" : "top-6 -left-6 scale-125"} />
       <StarGlow className={align === "right" ? "bottom-0 -left-8 opacity-50" : "bottom-0 -right-8 opacity-50"} />
@@ -167,7 +171,6 @@ function AcademicLabel({
   );
 }
 
-/** 아이콘 컴포넌트 */
 function IconHandshake() {
   return (
     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" className="opacity-80">
@@ -193,6 +196,7 @@ function IconHandshake() {
     </svg>
   );
 }
+
 function IconFilm() {
   return (
     <svg width="54" height="44" viewBox="0 0 28 24" fill="none" className="opacity-80">
@@ -202,6 +206,7 @@ function IconFilm() {
     </svg>
   );
 }
+
 function IconFolder() {
   return (
     <svg width="54" height="44" viewBox="0 0 28 24" fill="none" className="opacity-80">
@@ -215,35 +220,42 @@ function IconFolder() {
   );
 }
 
+function IconConfetti() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="opacity-80">
+      <path
+        d="M6 6c3 0 5 2 5 5-3 0-5-2-5-5ZM13 4c2 1 3 3 3 5-2 0-4-2-3-5ZM16 13c2 0 4 2 4 4-2 0-4-2-4-4Z"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M8 15l-2 4M12 13v5M18 7l2-2M5 11l-3-1M19 12l3-1" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function HomeDeptTeamShowcase() {
   return (
     <section className="relative text-white overflow-hidden">
-      {/* 전체 배경 그라데이션 */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#9d5ce5] via-[#8e49d3] to-[#7b36c4]" />
 
-      {/* ===== 뽀샤시한 “블러셔” 레이어 (추가 핵심) ===== */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* 큰 빛 번짐 */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-white/10 blur-[160px]" />
         <div className="absolute top-[280px] -left-40 w-[720px] h-[720px] rounded-full bg-white/10 blur-[170px]" />
         <div className="absolute bottom-0 -right-56 w-[780px] h-[780px] rounded-full bg-white/12 blur-[190px]" />
-        {/* 살짝 핑크톤 섞인 번짐 */}
         <div className="absolute top-[520px] right-[18%] w-[560px] h-[560px] rounded-full bg-fuchsia-200/10 blur-[160px]" />
-        {/* 은은한 ‘안개’ 레이어 */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white/10 opacity-30" />
       </div>
 
-      {/* 기존 배경 장식 블러들 (유지) */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-white/10 blur-[150px] rounded-full pointer-events-none" />
       <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-purple-400/20 blur-[130px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 px-6">
-        {/* ===== 학술국 소개 섹션 ===== */}
         <div className="max-w-7xl mx-auto pt-24 pb-16">
           <h2 className={`text-center ${hand} text-6xl md:text-7xl drop-shadow-md`}>학술국 소개</h2>
         </div>
 
-        {/* 학술국 - 모바일 레이아웃 */}
         <div className="md:hidden max-w-xl mx-auto space-y-12 pb-20">
           {ACADEMIC.map((item) => (
             <div key={item.key} className="space-y-6">
@@ -256,28 +268,18 @@ export default function HomeDeptTeamShowcase() {
           ))}
         </div>
 
-        {/* 학술국 - 데스크탑 레이아웃 (지그재그 및 연결선) */}
         <div className="hidden md:block max-w-6xl mx-auto relative pb-40">
-          {/* 중앙 연결선 SVG */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 1250">
-            {/* 수직 중앙선 */}
             <line x1="500" y1="0" x2="500" y2="1250" stroke="white" strokeWidth="1.5" strokeOpacity="0.15" />
-
-            {/* 기획부 수평 연결선 */}
             <line x1="180" y1="210" x2="500" y2="210" stroke="white" strokeWidth="1.2" strokeOpacity="0.3" />
             <circle cx="500" cy="210" r="4.5" fill="white" fillOpacity="0.9" />
-
-            {/* 카피부 수평 연결선 */}
             <line x1="820" y1="585" x2="500" y2="585" stroke="white" strokeWidth="1.2" strokeOpacity="0.3" />
             <circle cx="500" cy="585" r="4.5" fill="white" fillOpacity="0.9" />
-
-            {/* 미디부 수평 연결선 */}
             <line x1="180" y1="960" x2="500" y2="960" stroke="white" strokeWidth="1.2" strokeOpacity="0.3" />
             <circle cx="500" cy="960" r="4.5" fill="white" fillOpacity="0.9" />
           </svg>
 
           <div className="space-y-32">
-            {/* 1. 기획부 (라벨 좌측 / 카드 우측) */}
             <div className="flex items-center gap-16 lg:gap-24">
               <div className="w-[220px] shrink-0">
                 <AcademicLabel title="기획부" href={ACADEMIC[0].href} align="left" />
@@ -287,7 +289,6 @@ export default function HomeDeptTeamShowcase() {
               </div>
             </div>
 
-            {/* 2. 카피부 (라벨 우측 / 카드 좌측) */}
             <div className="flex flex-row-reverse items-center gap-16 lg:gap-24">
               <div className="w-[220px] shrink-0">
                 <AcademicLabel title="카피부" href={ACADEMIC[1].href} align="right" />
@@ -297,7 +298,6 @@ export default function HomeDeptTeamShowcase() {
               </div>
             </div>
 
-            {/* 3. 미디부 (라벨 좌측 / 카드 우측) */}
             <div className="flex items-center gap-16 lg:gap-24">
               <div className="w-[220px] shrink-0">
                 <AcademicLabel title="미디부" href={ACADEMIC[2].href} align="left" />
@@ -309,16 +309,13 @@ export default function HomeDeptTeamShowcase() {
           </div>
         </div>
 
-        {/* ===== 운영팀 소개 섹션 (기존 유지) ===== */}
         <div className="relative z-10 max-w-7xl mx-auto pt-32 pb-32">
           <h2 className={`text-center ${hand} text-6xl md:text-7xl drop-shadow-sm`}>운영팀 소개</h2>
 
-          {/* 운영팀 - 데스크탑 */}
           <div className="relative mt-24 hidden md:block">
-            <div className="relative min-h-[1000px]">
+            <div className="relative min-h-[1360px]">
               <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[1.5px] h-full bg-white/20" />
 
-              {/* 대외협력팀 */}
               <div className="absolute left-0 top-12 w-[44%] text-right">
                 <div className="flex items-center justify-end gap-4 mb-5">
                   <span className={`${hand} text-6xl`}>대외협력팀</span>
@@ -329,7 +326,6 @@ export default function HomeDeptTeamShowcase() {
               </div>
               <div className="absolute left-1/2 top-24 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg" />
 
-              {/* 영상제작팀 */}
               <div className="absolute right-0 top-[380px] w-[44%] text-left">
                 <div className="flex items-center gap-4 mb-5">
                   <span className={`${hand} text-6xl`}>영상제작팀</span>
@@ -340,7 +336,6 @@ export default function HomeDeptTeamShowcase() {
               </div>
               <div className="absolute left-1/2 top-[410px] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg" />
 
-              {/* 콘텐츠팀 */}
               <div className="absolute left-0 top-[750px] w-[44%] text-right">
                 <div className="flex items-center justify-end gap-4 mb-5">
                   <span className={`${hand} text-6xl`}>콘텐츠팀</span>
@@ -350,10 +345,19 @@ export default function HomeDeptTeamShowcase() {
                 <p className={`mt-8 text-white/85 leading-relaxed text-lg ${body}`}>{OPERATIONS[2].desc}</p>
               </div>
               <div className="absolute left-1/2 top-[800px] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg" />
+
+              <div className="absolute right-0 top-[1120px] w-[44%] text-left">
+                <div className="flex items-center gap-4 mb-5">
+                  <span className={`${hand} text-6xl`}>행사팀</span>
+                  <IconConfetti />
+                </div>
+                <PillButton href={OPERATIONS[3].href} />
+                <p className={`mt-8 text-white/85 leading-relaxed text-lg ${body}`}>{OPERATIONS[3].desc}</p>
+              </div>
+              <div className="absolute left-1/2 top-[1150px] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-lg" />
             </div>
           </div>
 
-          {/* 운영팀 - 모바일 */}
           <div className="md:hidden mt-16 space-y-16">
             {OPERATIONS.map((t) => (
               <div key={t.key} className="relative bg-white/5 rounded-3xl p-8 border border-white/10">
