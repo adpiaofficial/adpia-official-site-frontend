@@ -44,6 +44,10 @@ import CommunityDetailPage from "./pages/CommunityDetailPage";
 import CommunityListPage from "./pages/CommunityListPage";
 import CommunityUpsertPage from "./pages/CommunityUpsertPage";
 
+import ArchiveDetailPage from "./pages/ArchiveDetailPage";
+import ArchiveListPage from "./pages/ArchiveListPage";
+import ArchiveUpsertPage from "./pages/ArchiveUpsertpage";
+
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
 );
@@ -96,6 +100,11 @@ function App() {
           <Route path="/archive/three-minute-speech/:id" element={<ThreeMinuteSpeechDetailPage />} />
           <Route path="/archive/three-minute-speech/new" element={<ThreeMinuteSpeechUpsertPage />} />
           <Route path="/archive/three-minute-speech/:id/edit" element={<ThreeMinuteSpeechUpsertPage />} />
+
+          <Route path="/archive/:category" element={<ArchiveListPage />} />
+          <Route path="/archive/:category/new" element={<ArchiveUpsertPage />} />
+          <Route path="/archive/:category/:id" element={<ArchiveDetailPage />} />
+          <Route path="/archive/:category/:id/edit" element={<ArchiveUpsertPage />} />
 
           <Route path="/seminar/:category" element={<SeminarListPage />} />
           <Route path="/seminar/:category/new" element={<SeminarUpsertPage />} />

@@ -22,7 +22,11 @@ export type RecruitBoardCode =
   | "COMMUNITY_NOTICE"
   | "AD_CHANCE"
   | "ACTIVITY_PHOTO"
-  | "OB_BOARD";
+  | "OB_BOARD"
+  | "COMPETITION_PT"
+  | "SOCIAL_PROJECT"
+  | "AD_CONTEST"
+  | "AD_INTRODUCTION";
 
 export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
 
