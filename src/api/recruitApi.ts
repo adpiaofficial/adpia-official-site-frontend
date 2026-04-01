@@ -18,7 +18,11 @@ export type RecruitBoardCode =
   | "NEWS"
   | "HUNDRED_QNA"
   | "THREE_MIN_SPEECH"
-  | "SEMINAR";
+  | "SEMINAR"
+  | "COMMUNITY_NOTICE"
+  | "AD_CHANCE"
+  | "ACTIVITY_PHOTO"
+  | "OB_BOARD";
 
 export type RecruitPostStatus = "DRAFT" | "PUBLISHED";
 
@@ -54,12 +58,14 @@ export type RecruitPost = {
   pinned: boolean;
   commentEnabled: boolean;
   likeEnabled: boolean;
-  viewCount: number;
-  likedByMe?: boolean;
   likeCount?: number;
+  likedByMe?: boolean;
+  viewCount: number;
 
   createdAt: string;
   updatedAt: string;
+
+  thumbnailUrl?: string | null;
 
   blocks: RecruitBlockResponse[];
   locked?: boolean;

@@ -42,8 +42,8 @@ export default function Navbar() {
         path: "/community",
         subMenus: [
           { name: "공지사항", path: "/community/notice" },
-          { name: "애드찬스", path: "/community/chance" },
-          { name: "활동 사진", path: "/community/gallery" },
+          { name: "애드찬스", path: "/community/adchance" },
+          { name: "활동 사진", path: "/community/activity" },
           { name: "OB 게시판", path: "/community/ob" },
         ],
       },

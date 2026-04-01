@@ -40,6 +40,10 @@ import SeminarListPage from "./pages/SeminarListPage";
 import SeminarDetailPage from "./pages/SeminarDetailPage";
 import SeminarUpsertPage from "./pages/SeminarUpsertPage";
 
+import CommunityDetailPage from "./pages/CommunityDetailPage";
+import CommunityListPage from "./pages/CommunityListPage";
+import CommunityUpsertPage from "./pages/CommunityUpsertPage";
+
 const CommunityPage = () => (
   <div className="pt-40 text-center font-black text-3xl text-gray-200 uppercase">Community Page</div>
 );
@@ -97,6 +101,11 @@ function App() {
           <Route path="/seminar/:category/new" element={<SeminarUpsertPage />} />
           <Route path="/seminar/:category/:id" element={<SeminarDetailPage />} />
           <Route path="/seminar/:category/:id/edit" element={<SeminarUpsertPage />} />
+          
+          <Route path="/community/:category" element={<CommunityListPage />} />
+          <Route path="/community/:category/new" element={<CommunityUpsertPage />} />
+          <Route path="/community/:category/:id" element={<CommunityDetailPage />} />
+          <Route path="/community/:category/:id/edit" element={<CommunityUpsertPage />} />
 
           {/* ✅ ADMIN */}
           <Route
