@@ -51,3 +51,13 @@ export async function getHundredQnaCommentStats() {
   const res = await httpClient.get<HundredQnaCommentStat[]>("/hundred-qna/comment-stats");
   return res.data;
 }
+
+export async function createHundredQnaDraft(req: { title?: string } = {}) {
+  const res = await httpClient.post<RecruitPost>("/recruit/HUNDRED_QNA/draft", req);
+  return res.data;
+}
+
+export async function publishHundredQnaPost(id: number, req: any) {
+  const res = await httpClient.post<RecruitPost>(`/recruit/posts/${id}/publish`, req);
+  return res.data;
+}

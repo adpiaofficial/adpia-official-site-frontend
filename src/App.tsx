@@ -6,6 +6,7 @@ import MainPage from "./pages/MainPage";
 import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 import AdminMembersPage from "./pages/AdminMembersPage";
 import AdminPopupEditPage from "./pages/AdminPopupEditPage";
@@ -90,6 +91,7 @@ function App() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route path="/archive/hundred-qna" element={<HundredQnaListPage />} />
           <Route path="/archive/hundred-qna/:id" element={<HundredQnaDetailPage />} />

@@ -1,6 +1,7 @@
 import httpClient from "./httpClient";
 import type { PageResponse, RecruitPost, RecruitPostUpsertRequest } from "./recruitApi";
 import type { SeminarCategory } from "../lib/seminarCategory";
+import { seminarCategoryMeta } from "../lib/seminarCategory";
 
 export async function getSeminarPosts(category: SeminarCategory, page = 0, size = 15) {
   const res = await httpClient.get<PageResponse<RecruitPost>>(`/seminar/${category}/posts`, {
@@ -42,4 +43,18 @@ export async function likeSeminarPost(category: SeminarCategory, id: number) {
 
 export async function unlikeSeminarPost(category: SeminarCategory, id: number) {
   await httpClient.delete(`/seminar/${category}/posts/${id}/like`);
+}
+
+export async function createSeminarDraft(
+  category: SeminarCategory,
+  req: { title?: string } = {}
+) {
+  const boardCode = seminarCategoryMeta[category].boardCode;
+  const res = await httpClient.post<RecruitPost>(`/recruit/${boardCode}/draft`, req);
+  return res.data;
+}
+
+export async function publishSeminarPost(id: number, req: any) {
+  const res = await httpClient.post<RecruitPost>(`/recruit/posts/${id}/publish`, req);
+  return res.data;
 }

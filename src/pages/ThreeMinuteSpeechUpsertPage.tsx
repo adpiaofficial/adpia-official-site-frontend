@@ -3,8 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { RecruitBlockRequest } from "../api/recruitApi";
 import BlockEditor from "../components/BlockEditor";
 import {
-  createThreeMinuteSpeechPost,
+  createThreeMinuteSpeechDraft,
   getThreeMinuteSpeechPost,
+  publishThreeMinuteSpeechPost,
   updateThreeMinuteSpeechPost,
 } from "../api/threeMinuteSpeechApi";
 import useRequireLoginRedirect from "../hooks/useRequireLoginRedirect";
@@ -13,13 +14,16 @@ export default function ThreeMinuteSpeechUpsertPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user, authLoading } = useRequireLoginRedirect();
+
   const isEdit = useMemo(() => Boolean(id), [id]);
   const postId = Number(id);
-
   const canWrite = !!user;
 
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
+  const [creatingDraft, setCreatingDraft] = useState(false);
+
+  const [editorPostId, setEditorPostId] = useState<number | null>(isEdit ? postId : null);
 
   const [title, setTitle] = useState("");
   const [blocks, setBlocks] = useState<RecruitBlockRequest[]>([
@@ -41,6 +45,7 @@ export default function ThreeMinuteSpeechUpsertPage() {
       setLoading(true);
       try {
         const data = await getThreeMinuteSpeechPost(postId);
+        setEditorPostId(data.id);
         setTitle(data.title ?? "");
         setBlocks(
           data.blocks?.length
@@ -64,6 +69,28 @@ export default function ThreeMinuteSpeechUpsertPage() {
     fetchPost();
   }, [isEdit, postId, navigate]);
 
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+    if (isEdit) return;
+    if (editorPostId) return;
+
+    const createDraft = async () => {
+      setCreatingDraft(true);
+      try {
+        const draft = await createThreeMinuteSpeechDraft({ title: "제목 없음" });
+        setEditorPostId(draft.id);
+      } catch (e: any) {
+        alert(e?.response?.data?.message || "작성 시작에 실패했습니다.");
+        navigate("/archive/three-minute-speech", { replace: true });
+      } finally {
+        setCreatingDraft(false);
+      }
+    };
+
+    createDraft();
+  }, [authLoading, user, isEdit, editorPostId, navigate]);
+
   const normalizeBlocks = (items: RecruitBlockRequest[]) =>
     items.map((b, index) => ({
       ...b,
@@ -86,7 +113,12 @@ export default function ThreeMinuteSpeechUpsertPage() {
         alert("수정되었습니다.");
         navigate(`/archive/three-minute-speech/${saved.id}`, { replace: true });
       } else {
-        const saved = await createThreeMinuteSpeechPost({
+        if (!editorPostId) {
+          alert("작성 공간을 준비 중입니다.");
+          return;
+        }
+
+        const saved = await publishThreeMinuteSpeechPost(editorPostId, {
           title: title.trim(),
           blocks: normalizedBlocks,
         });
@@ -129,11 +161,17 @@ export default function ThreeMinuteSpeechUpsertPage() {
             취소
           </button>
           <button
-            disabled={submitting}
+            disabled={submitting || creatingDraft || !editorPostId}
             onClick={onSubmit}
             className="px-5 py-2 rounded-xl bg-[#813eb6] text-white text-sm font-black hover:bg-[#6e33a1] disabled:opacity-50"
           >
-            {submitting ? "저장 중..." : isEdit ? "수정하기" : "등록하기"}
+            {creatingDraft
+              ? "작성 공간 준비 중..."
+              : submitting
+              ? "저장 중..."
+              : isEdit
+              ? "수정하기"
+              : "등록하기"}
           </button>
         </div>
       </div>
@@ -164,13 +202,19 @@ export default function ThreeMinuteSpeechUpsertPage() {
 
           <div>
             <div className="block text-sm font-black text-gray-800 mb-2">본문</div>
-            <BlockEditor
-              boardCode="THREE_MIN_SPEECH"
-              postId={isEdit ? postId : 0}
-              value={blocks}
-              onChange={setBlocks}
-              disabled={submitting}
-            />
+            {editorPostId ? (
+              <BlockEditor
+                boardCode="THREE_MIN_SPEECH"
+                postId={editorPostId}
+                value={blocks}
+                onChange={setBlocks}
+                disabled={submitting || creatingDraft}
+              />
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-6 text-sm font-bold text-gray-400">
+                작성 공간을 준비하는 중입니다...
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -73,14 +73,13 @@ const LoginPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="text-[11px] font-bold text-gray-400 hover:text-[#813eb6]"
-            >
-              비밀번호를 잊으셨나요?
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/reset-password")}
+            className="text-[11px] font-bold text-gray-400 hover:text-[#813eb6]"
+          >
+            비밀번호를 잊으셨나요?
+          </button>
 
           {errorMsg && (
             <p className="text-red-500 text-xs font-medium">{errorMsg}</p>

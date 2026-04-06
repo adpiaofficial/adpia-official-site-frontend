@@ -38,3 +38,13 @@ export async function likeThreeMinuteSpeechPost(id: number) {
 export async function unlikeThreeMinuteSpeechPost(id: number) {
   await httpClient.delete(`/three-minute-speech/posts/${id}/like`);
 }
+
+export async function createThreeMinuteSpeechDraft(req: { title?: string } = {}) {
+  const res = await httpClient.post<RecruitPost>("/recruit/THREE_MIN_SPEECH/draft", req);
+  return res.data;
+}
+
+export async function publishThreeMinuteSpeechPost(id: number, req: any) {
+  const res = await httpClient.post<RecruitPost>(`/recruit/posts/${id}/publish`, req);
+  return res.data;
+}
