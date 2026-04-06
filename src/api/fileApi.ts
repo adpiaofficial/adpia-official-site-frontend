@@ -3,8 +3,8 @@ import httpClient from "./httpClient";
 export type PresignRequest = {
   boardCode: string;
   postId: number;
-  contentType: string;
   originalFilename: string;
+  contentType?: string;
 };
 
 export type PresignResponse = {

@@ -60,7 +60,6 @@ export default function useS3Upload() {
         const presigned = await presignFile({
           boardCode,
           postId,
-          contentType: file.type || "application/octet-stream",
           originalFilename: file.name,
         });
 
@@ -116,7 +115,6 @@ export default function useS3Upload() {
         const presigned = await presignFile({
           boardCode: target.boardCode,
           postId: target.postId,
-          contentType: target.file.type || "application/octet-stream",
           originalFilename: target.file.name,
         });
 
@@ -146,7 +144,9 @@ export default function useS3Upload() {
       } catch (e: any) {
         setItems((cur) =>
           cur.map((it) =>
-            it.id === uploadId ? { ...it, status: "error", error: e?.message ?? "upload failed" } : it
+            it.id === uploadId
+              ? { ...it, status: "error", error: e?.message ?? "upload failed" }
+              : it
           )
         );
         throw e;
